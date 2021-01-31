@@ -24,12 +24,10 @@ SOFTWARE.
 */
 
 
-using log4net;
-
-namespace HappyIRCClientLibrary.Config
+namespace HappyIRCConsoleClient
 {
-    public interface IConfig
+    public enum MessageType
     {
-        ILog GetLogger(string name);
+        Unknown, ChannelMessage, PrivateMessage, NumericResponse,
     }
 }

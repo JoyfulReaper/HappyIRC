@@ -23,13 +23,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-using log4net;
-
-namespace HappyIRCClientLibrary.Config
+namespace HappyIRCConsoleClient.Models
 {
-    public interface IConfig
+    public class ServerMessage
     {
-        ILog GetLogger(string name);
+        public MessageType Type { get; private set; }
+        public List<string> Parameters { get; private set; }
+        public string Message { get; private set; }
+        public string Nick { get; private set; }
+        public string Command { get; private set; }
+
+        public ServerMessage(MessageType type, string command, string nick, List<string> parameters, string message)
+        {
+            Type = type;
+            Command = command;
+            Nick = nick;
+            Parameters = parameters;
+            Message = message;
+        }
     }
 }
