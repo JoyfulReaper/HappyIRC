@@ -1,4 +1,5 @@
 ﻿using System;
+using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,11 +12,12 @@ namespace HappyIRCConsoleClient
         static void Main(string[] args)
         {
             IConfig config = new Config();
-
-            Console.WriteLine("Hello World!");
-            var logger = config.GetLogger("test");
+            var logger = config.GetLogger("IRCClient");
 
             logger.Error("test");
+
+            IRCClient client = new IRCClient("irc.quakenet.org", 6667, "HappyIRC", "HappyIRC", config);
+            client.Connect();
         }
     }
 }
