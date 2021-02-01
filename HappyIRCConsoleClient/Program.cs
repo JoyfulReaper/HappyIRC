@@ -27,16 +27,17 @@ SOFTWARE.
 using System;
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyIRCConsoleClient
 {
     class Program
     {
-        private static readonly IServiceProvider Container = new ContainerBuilder().Build();
+        private static readonly IServiceProvider container = new ContainerBuilder().Build();
 
         static void Main(string[] args)
         {
-            IConfig config = new Config();
+            IConfig config = container.GetRequiredService<IConfig>();
             var logger = config.GetLogger("IRCClient");
 
             logger.Error("test");
