@@ -24,9 +24,10 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Config;
+using HappyIRCConsoleClient.Models;
 using log4net;
 using System.Collections.Generic;
-
+using System.Text;
 
 namespace HappyIRCConsoleClient
 {
@@ -44,12 +45,12 @@ namespace HappyIRCConsoleClient
             log = config.GetLogger("ParseMessage");
         }
 
-        public void ParseMessage(string message)
+        public ServerMessage ParseMessage(string message)
         {
-            string trailing;
-            string prefix;
-            string command;
-            string nick;
+            string trailing = string.Empty;
+            string prefix = string.Empty;
+            string command = string.Empty;
+            string nick = string.Empty;
             List<string> paramerters = new List<string>();
             int prefixEnd = -1;
             int trailingStart = message.IndexOf(" :");
@@ -90,8 +91,18 @@ namespace HappyIRCConsoleClient
             }
 
             MessageType type = GetType(command, paramerters);
-            // Do something with the message
-            
+            ServerMessage serverMessage = new ServerMessage(type, command, nick, paramerters, message);
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"Type: {type} Prefix: {prefix} Command: {command}");
+            foreach(var p in paramerters)
+            {
+                sb.Append($" Parameter: {p} ");
+            }
+            sb.Append($" tailing: {trailing}");
+            log.Debug(sb.ToString());
+
+            return serverMessage;
         }
 
         private MessageType GetType(string command, List<string> parameters)

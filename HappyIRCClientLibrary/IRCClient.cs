@@ -26,9 +26,13 @@ SOFTWARE.
 
 using HappyIRCClientLibrary.Config;
 using log4net;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Linq;
+using System;
+using HappyIRCConsoleClient;
 
 namespace HappyIRCClientLibrary
 {
@@ -42,8 +46,10 @@ namespace HappyIRCClientLibrary
 
         private Thread listenThread;
         private readonly IConfig config;
-        private ILog log;
+        private readonly ILog log;
         private TcpClient client;
+
+        private MessageParser messageParser;
 
         /// <summary>
         /// Create an IRC Client
@@ -67,6 +73,8 @@ namespace HappyIRCClientLibrary
 
             this.config = config;
             log = config.GetLogger("IRCClientLib");
+
+            messageParser = new MessageParser(NickName, config);
         }
 
         /// <summary>
@@ -95,6 +103,7 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public void Disconnect()
         {
+            SendMessageToServer("QUIT\r\n");
             client.Close();
             Connected = false;
         }
@@ -105,23 +114,33 @@ namespace HappyIRCClientLibrary
         /// <param name="networkSteam">The network stream to listen on</param>
         private void ListenThread()
         {
-            NetworkStream ns = client.GetStream();
+            NetworkStream networkstream = client.GetStream();
+            Queue<string> messageQueue = new Queue<string>();
 
             while (true)
             {
                 byte[] bytes = new byte[1024];
-                int bytesRead = ns.Read(bytes, 0, bytes.Length);
+                int bytesRead = networkstream.Read(bytes, 0, bytes.Length);
 
                 var message = Encoding.ASCII.GetString(bytes, 0, bytesRead);
-                log.Debug($"ListenThread: {message}");
+                var splitMessages = message.Split('\n');
 
-                if (message.ToUpperInvariant().StartsWith("PING"))
+                Array.ForEach(splitMessages, x => messageQueue.Enqueue(x));
+
+                while(messageQueue.Count > 0)
                 {
-                    RespondToPing(message);
-                }
-                else
-                {
-                    HandleServerResponse(message);
+                    var m = messageQueue.Dequeue();
+
+                    log.Debug($"ListenThread: {message}");
+                    if (m.ToUpperInvariant().StartsWith("PING"))
+                    {
+                        RespondToPing(m);
+                    }
+                    else
+                    {
+                        var response = messageParser.ParseMessage(m);
+                        HandleServerResponse(m);
+                    }
                 }
             }
         }
