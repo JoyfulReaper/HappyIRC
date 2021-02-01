@@ -33,6 +33,7 @@ using System.Threading;
 using System.Linq;
 using System;
 using HappyIRCConsoleClient;
+using HappyIRCConsoleClient.Models;
 
 namespace HappyIRCClientLibrary
 {
@@ -139,9 +140,32 @@ namespace HappyIRCClientLibrary
                     else
                     {
                         var response = messageParser.ParseMessage(m);
-                        HandleServerResponse(m);
+                        if (!Connected)
+                        {
+                            ConnectionHelper(response);
+                        }
+                        else
+                        {
+                            HandleServerResponse(m);
+                        }
                     }
                 }
+            }
+        }
+
+        private void ConnectionHelper(ServerMessage message)
+        {
+            if(message.Command == "433")
+            {
+                log.Fatal("Server reports Nick is in use, unable to connect.");
+                log.Fatal("Quitting");
+
+                Disconnect();
+                Environment.Exit(0);
+            } 
+            else if(message.ResponseCode == CommandResponse.RPL_MYINFO)
+            {
+                Connected = true;
             }
         }
 

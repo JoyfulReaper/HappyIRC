@@ -23,30 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary;
-using System;
-using System.Collections.Generic;
-
-namespace HappyIRCConsoleClient.Models
+namespace HappyIRCClientLibrary.Models
 {
-    public class ServerMessage
+    public class Channel
     {
-        public MessageType Type { get; private set; }
-        public List<string> Parameters { get; private set; }
-        public string Message { get; private set; }
-        public string Nick { get; private set; }
-        public string Command { get; private set; }
-        public String Channel => Parameters[0];
-        public CommandResponse ResponseCode { get; private set; }
-
-        public ServerMessage(MessageType type, string command, List<string> parameters, string message, CommandResponse response, string nick)
-        {
-            Type = type;
-            Command = command;
-            Nick = nick;
-            Parameters = parameters;
-            Message = message;
-            ResponseCode = response;
-        }
+        public string Name { get; set; }
     }
 }
