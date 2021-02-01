@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+// TODO This will need some cleanup or probably a re-write.
+
 using HappyIRCClientLibrary.Config;
 using HappyIRCConsoleClient.Models;
 using log4net;
@@ -55,21 +57,46 @@ namespace HappyIRCConsoleClient
             int prefixEnd = -1;
             int trailingStart = message.IndexOf(" :");
 
-            // Extract the nickname
-            if (message.IndexOf("!") >= 0)
+            var components = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            var queue = new Queue<string>(components);
+            var entry = string.Empty;
+
+            if (queue.Count != 0)
             {
-                nick = message.Substring(1, message.IndexOf("!"));
+                entry = queue.Dequeue();
+                if (entry.StartsWith(":"))
+                {
+                    prefix = entry.Substring(1);
+                }
             }
 
-            // Extract the prefix
-            if(message.StartsWith(":"))
+            while (queue.Count > 0)
             {
-                prefixEnd = message.IndexOf(" ");
-                prefix = message.Substring(1, prefixEnd);
+                entry = queue.Dequeue();
+                if(entry.StartsWith("!"))
+                {
+                    nick = entry.Substring(1);
+                }
             }
+
+            //// Extract the nickname
+            //if (message.IndexOf("!") >= 0)
+            //{
+            //    nick = message.Substring(1, message.IndexOf("!"));
+            //}
+
+            //// Extract the prefix
+            //if(message.StartsWith(":"))
+            //{
+            //    var test = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            //    prefix = test.Substring(1, message.Length - 1);
+
+            //    //prefixEnd = message.IndexOf(" ");
+            //    //prefix = message.Substring(1);
+            //}
 
             // Exrtract trailing part of message
-            if (trailingStart >=0)
+            if (trailingStart >= 0)
             {
                 trailing = message.Substring(trailingStart + 2);
             }
@@ -79,14 +106,20 @@ namespace HappyIRCConsoleClient
             }
 
             // Extract command and parameters
-            string[] commandAndParameters = message.Substring(prefixEnd + 1, trailingStart).Split(" ");
-            command = commandAndParameters[0];
-
-            if(commandAndParameters.Length > 1)
+            if (message.Length != 0)
             {
-                for(int i = 1; i < commandAndParameters.Length; i++)
+                string[] commandAndParameters = message.Substring(prefixEnd + 1).Split(" ");
+                if (commandAndParameters.Length > 1)
                 {
-                    paramerters.Add(commandAndParameters[i]);
+                    command = commandAndParameters[1];
+                }
+
+                if (commandAndParameters.Length > 1)
+                {
+                    for (int i = 1; i < commandAndParameters.Length; i++)
+                    {
+                        paramerters.Add(commandAndParameters[i]);
+                    }
                 }
             }
 
@@ -99,7 +132,7 @@ namespace HappyIRCConsoleClient
             {
                 sb.Append($" Parameter: {p} ");
             }
-            sb.Append($" tailing: {trailing}");
+            sb.Append($" trailing: {trailing}");
             log.Debug(sb.ToString());
 
             return serverMessage;
