@@ -26,74 +26,62 @@ SOFTWARE.
 // TODO This will need some cleanup or probably a re-write.
 
 using HappyIRCClientLibrary.Config;
-using HappyIRCConsoleClient.Models;
+using HappyIRCClientLibrary.Models;
 using log4net;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HappyIRCConsoleClient
+namespace HappyIRCClientLibrary
 {
+    /// <summary>
+    /// Parse the IRC server'c reply
+    /// </summary>
     public class MessageParser
     {
-        private readonly string nick; // User's nickname
+        private readonly string clientNick; // User's nickname
         private readonly IConfig config;
 
         private ILog log;
 
-        public MessageParser(string nick, IConfig config)
+        public MessageParser(string clientNick, IConfig config)
         {
-            this.nick = nick;
+            this.clientNick = clientNick;
             this.config = config;
             log = config.GetLogger("ParseMessage");
         }
 
         public ServerMessage ParseMessage(string message)
         {
-            string trailing = string.Empty;
-            string prefix = string.Empty;
-            string command = string.Empty;
-            string nick = string.Empty;
-            List<string> paramerters = new List<string>();
-            int prefixEnd = -1;
-            int trailingStart = message.IndexOf(" :");
+            // Example:
+            // :userNick!~userNick@userhost PRIVMSG #Channel :message
 
-            var components = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-            var queue = new Queue<string>(components);
-            var entry = string.Empty;
+            string trailing = string.Empty; // Trailing text (ex message sent to a channel)
+            string prefix = string.Empty; // The prefix (nick and hostname)
+            string command = string.Empty; // The command
+            string nick = string.Empty; // Nick associated with command
 
-            if (queue.Count != 0)
+            List<string> parameters = new List<string>();
+            int prefixEnd = message.Length; // ending index of the prefix
+            int trailingStart = message.IndexOf(" :"); // Index where the trailing message begins
+
+            // Extract the nick
+            if(message.IndexOf('!') > 1)
             {
-                entry = queue.Dequeue();
-                if (entry.StartsWith(":"))
-                {
-                    prefix = entry.Substring(1);
-                }
+                int nickEnd = message.IndexOf('!');
+                nick = message.Substring(1, nickEnd - 1);
             }
 
-            while (queue.Count > 0)
+            // Extract the prefix
+            if (message.StartsWith(':'))
             {
-                entry = queue.Dequeue();
-                if(entry.StartsWith("!"))
+                if (message.Contains(' '))
                 {
-                    nick = entry.Substring(1);
+                    prefixEnd = message.IndexOf(' ');
                 }
+
+                prefix = message.Substring(1, prefixEnd - 1);
             }
-
-            //// Extract the nickname
-            //if (message.IndexOf("!") >= 0)
-            //{
-            //    nick = message.Substring(1, message.IndexOf("!"));
-            //}
-
-            //// Extract the prefix
-            //if(message.StartsWith(":"))
-            //{
-            //    var test = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-            //    prefix = test.Substring(1, message.Length - 1);
-
-            //    //prefixEnd = message.IndexOf(" ");
-            //    //prefix = message.Substring(1);
-            //}
 
             // Exrtract trailing part of message
             if (trailingStart >= 0)
@@ -108,27 +96,33 @@ namespace HappyIRCConsoleClient
             // Extract command and parameters
             if (message.Length != 0)
             {
-                string[] commandAndParameters = message.Substring(prefixEnd + 1).Split(" ");
+                string[] commandAndParameters = message.Substring(prefixEnd).Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 if (commandAndParameters.Length > 1)
                 {
-                    command = commandAndParameters[1];
+                    command = commandAndParameters[0];
                 }
 
                 if (commandAndParameters.Length > 1)
                 {
                     for (int i = 1; i < commandAndParameters.Length; i++)
                     {
-                        paramerters.Add(commandAndParameters[i]);
+                        if(commandAndParameters[i].StartsWith(":"))
+                        {
+                            break;
+                        }
+
+                        parameters.Add(commandAndParameters[i]);
                     }
                 }
             }
 
-            MessageType type = GetType(command, paramerters);
-            ServerMessage serverMessage = new ServerMessage(type, command, nick, paramerters, message);
+            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message);
 
+
+            // Build the debug message
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Type: {type} Prefix: {prefix} Command: {command}");
-            foreach(var p in paramerters)
+            sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
+            foreach(var p in parameters)
             {
                 sb.Append($" Parameter: {p} ");
             }
@@ -138,13 +132,14 @@ namespace HappyIRCConsoleClient
             return serverMessage;
         }
 
-        private MessageType GetType(string command, List<string> parameters)
+        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message)
         {
             MessageType type = MessageType.Unknown;
+            NumericReply numericReply = NumericReply.INVALID;
 
             if(command == "PRIVMSG")
             {
-                if(parameters[0] == nick)
+                if(parameters[0] == clientNick) // I think this should be one...
                 {
                     type = MessageType.PrivateMessage;
                 }
@@ -154,12 +149,21 @@ namespace HappyIRCConsoleClient
                 }
             }
 
-            if(int.TryParse(command, out int _))
+            if(int.TryParse(command, out int reply))
             {
-                type = MessageType.NumericResponse;
+                type = MessageType.NumericReply;
+                log.Debug($"Found numeric reply: {reply}");
+
+
+                if(Enum.IsDefined(typeof(NumericReply), reply))
+                {
+                    numericReply = (NumericReply)reply;
+                    log.Debug($"I know the numeric reply as: {numericReply}");
+                }
             }
 
-            return type;
+            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick);
+            return serverMessage;
         }
     }
 }

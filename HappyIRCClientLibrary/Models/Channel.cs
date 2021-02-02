@@ -23,11 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Models
 {
-    public enum MessageType
+    /// <summary>
+    /// Represents a Channel
+    /// </summary>
+    public class Channel
     {
-        Unknown, ChannelMessage, PrivateMessage, NumericReply,
+        public string Name { get; set; }
     }
 }

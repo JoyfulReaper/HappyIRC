@@ -25,12 +25,12 @@ SOFTWARE.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HappyIRCConsoleClient.Models
+namespace HappyIRCClientLibrary.Models
 {
+    /// <summary>
+    /// Represents a Message from the IRC server
+    /// </summary>
     public class ServerMessage
     {
         public MessageType Type { get; private set; }
@@ -38,14 +38,19 @@ namespace HappyIRCConsoleClient.Models
         public string Message { get; private set; }
         public string Nick { get; private set; }
         public string Command { get; private set; }
+        public string Channel => Parameters[1];
+        public string Trailing { get; private set; }
+        public NumericReply ResponseCode { get; private set; }
 
-        public ServerMessage(MessageType type, string command, string nick, List<string> parameters, string message)
+        public ServerMessage(MessageType type, string command, List<string> parameters, string trailing, string message, NumericReply response, string nick)
         {
+            Trailing = trailing;
             Type = type;
             Command = command;
             Nick = nick;
             Parameters = parameters;
             Message = message;
+            ResponseCode = response;
         }
     }
 }
