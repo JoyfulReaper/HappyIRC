@@ -38,11 +38,13 @@ namespace HappyIRCClientLibrary.Models
         public string Message { get; private set; }
         public string Nick { get; private set; }
         public string Command { get; private set; }
-        public String Channel => Parameters[0];
+        public string Channel => Parameters[1];
+        public string Trailing { get; private set; }
         public NumericReply ResponseCode { get; private set; }
 
-        public ServerMessage(MessageType type, string command, List<string> parameters, string message, NumericReply response, string nick)
+        public ServerMessage(MessageType type, string command, List<string> parameters, string trailing, string message, NumericReply response, string nick)
         {
+            Trailing = trailing;
             Type = type;
             Command = command;
             Nick = nick;
