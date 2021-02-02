@@ -32,6 +32,7 @@ using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
+using HappyIRCClientLibrary.Enums;
 
 namespace HappyIRCClientLibrary
 {

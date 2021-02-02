@@ -26,6 +26,7 @@ SOFTWARE.
 // TODO This will need some cleanup or probably a re-write.
 
 using HappyIRCClientLibrary.Config;
+using HappyIRCClientLibrary.Enums;
 using HappyIRCClientLibrary.Models;
 using log4net;
 using System;
