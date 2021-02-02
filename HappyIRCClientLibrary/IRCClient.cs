@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
+using System.Linq;
 
 namespace HappyIRCClientLibrary
 {
@@ -44,7 +45,7 @@ namespace HappyIRCClientLibrary
         public string NickName { get; private set; } // The Nickname to connect with
         public string RealName { get; private set; } // The Realname to connect with
         public bool Connected { get; private set; } // True if connected
-        public List<Channel> MyProperty { get; set; }
+        public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
 
         private Thread listenThread; // Thread to listen to the server on
         private TcpClient client; // TcpClient connection to the server
@@ -202,7 +203,16 @@ namespace HappyIRCClientLibrary
             ns.Write(writeBuffer, 0, writeBuffer.Length);
         }
 
-        ////////////////////////////// NOTE: This stuff will probably be re-factored into a different class ///////////////////////////
+        private void ThrowIfNotConnected()
+        {
+            if (!Connected)
+            {
+                log.Error("Client is not connected to a server");
+                throw new InvalidOperationException("The client is not connected to a server.");
+            }
+        }
+
+        ////////////////////////////// !!!NOTE: This stuff will probably be re-factored into a different class!!! ///////////////////////////
         
         /// <summary>
         /// Join a channel
@@ -210,15 +220,17 @@ namespace HappyIRCClientLibrary
         /// <param name="channel"></param>
         public void Join(string channel)
         {
-            if(!Connected)
-            {
-                log.Error("Client is not connected to a server");
-                throw new InvalidOperationException("The client is not connected to a server.");
-            }
+            //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
 
+            ThrowIfNotConnected();
+
+            log.Info($"Attemping to join channel: {channel}");
             SendMessageToServer($"JOIN {channel}\r\n");
             Channel chan = new Channel() { Name = channel };
 
+            Channels.Add(chan);
+
+            
             /*Possible replies:
             ERR_NEEDMOREPARAMS ERR_BANNEDFROMCHAN
            ERR_INVITEONLYCHAN ERR_BADCHANNELKEY
@@ -226,6 +238,25 @@ namespace HappyIRCClientLibrary
            ERR_NOSUCHCHANNEL ERR_TOOMANYCHANNELS
            ERR_TOOMANYTARGETS ERR_UNAVAILRESOURCE
            RPL_TOPIC */
+        }
+
+        /// <summary>
+        /// Part (leave) a channel
+        /// </summary>
+        /// <param name="channel">The channel to part</param>
+        public void Part(string channel)
+        {
+            ThrowIfNotConnected();
+
+            log.Info($"Attemping to part channel: {channel}");
+            SendMessageToServer($"PART {channel}\r\n");
+
+            Channels.Remove(Channels.Where(x => x.Name == channel).FirstOrDefault());
+
+            /* Possible replies
+           ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
+           ERR_NOTONCHANNEL */
+
         }
     }
 }
