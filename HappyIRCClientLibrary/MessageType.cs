@@ -28,6 +28,6 @@ namespace HappyIRCConsoleClient
 {
     public enum MessageType
     {
-        Unknown, ChannelMessage, PrivateMessage, NumericResponse,
+        Unknown, ChannelMessage, PrivateMessage, NumericReply,
     }
 }

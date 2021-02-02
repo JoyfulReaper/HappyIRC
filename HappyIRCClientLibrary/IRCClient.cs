@@ -163,7 +163,7 @@ namespace HappyIRCClientLibrary
                 Disconnect();
                 Environment.Exit(0);
             } 
-            else if(message.ResponseCode == CommandResponse.RPL_MYINFO)
+            else if(message.ResponseCode == NumericReply.RPL_MYINFO)
             {
                 Connected = true;
             }

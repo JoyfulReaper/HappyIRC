@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HappyIRCClientLibrary
 {
-    public enum CommandResponse
+    public enum NumericReply
     {
         // 001 to 004 indicates the connection was successful
         INVALID = 0,

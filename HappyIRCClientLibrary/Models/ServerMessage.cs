@@ -29,6 +29,9 @@ using System.Collections.Generic;
 
 namespace HappyIRCConsoleClient.Models
 {
+    /// <summary>
+    /// Represents a Message from the IRC server
+    /// </summary>
     public class ServerMessage
     {
         public MessageType Type { get; private set; }
@@ -37,9 +40,9 @@ namespace HappyIRCConsoleClient.Models
         public string Nick { get; private set; }
         public string Command { get; private set; }
         public String Channel => Parameters[0];
-        public CommandResponse ResponseCode { get; private set; }
+        public NumericReply ResponseCode { get; private set; }
 
-        public ServerMessage(MessageType type, string command, List<string> parameters, string message, CommandResponse response, string nick)
+        public ServerMessage(MessageType type, string command, List<string> parameters, string message, NumericReply response, string nick)
         {
             Type = type;
             Command = command;
