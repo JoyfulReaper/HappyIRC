@@ -25,14 +25,19 @@ SOFTWARE.
 
 // TODO This will need some cleanup or probably a re-write.
 
+using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
 using HappyIRCConsoleClient.Models;
 using log4net;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace HappyIRCConsoleClient
 {
+    /// <summary>
+    /// Parse the IRC server'c reply
+    /// </summary>
     public class MessageParser
     {
         private readonly string nick; // User's nickname
@@ -53,7 +58,7 @@ namespace HappyIRCConsoleClient
             string prefix = string.Empty;
             string command = string.Empty;
             string nick = string.Empty;
-            List<string> paramerters = new List<string>();
+            List<string> parameters = new List<string>();
             int prefixEnd = -1;
             int trailingStart = message.IndexOf(" :");
 
@@ -61,6 +66,7 @@ namespace HappyIRCConsoleClient
             var queue = new Queue<string>(components);
             var entry = string.Empty;
 
+            // Extract the prefix
             if (queue.Count != 0)
             {
                 entry = queue.Dequeue();
@@ -70,6 +76,7 @@ namespace HappyIRCConsoleClient
                 }
             }
 
+            // Extract the Nick (Suspect logic error here...)
             while (queue.Count > 0)
             {
                 entry = queue.Dequeue();
@@ -78,22 +85,6 @@ namespace HappyIRCConsoleClient
                     nick = entry.Substring(1);
                 }
             }
-
-            //// Extract the nickname
-            //if (message.IndexOf("!") >= 0)
-            //{
-            //    nick = message.Substring(1, message.IndexOf("!"));
-            //}
-
-            //// Extract the prefix
-            //if(message.StartsWith(":"))
-            //{
-            //    var test = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-            //    prefix = test.Substring(1, message.Length - 1);
-
-            //    //prefixEnd = message.IndexOf(" ");
-            //    //prefix = message.Substring(1);
-            //}
 
             // Exrtract trailing part of message
             if (trailingStart >= 0)
@@ -118,17 +109,16 @@ namespace HappyIRCConsoleClient
                 {
                     for (int i = 1; i < commandAndParameters.Length; i++)
                     {
-                        paramerters.Add(commandAndParameters[i]);
+                        parameters.Add(commandAndParameters[i]);
                     }
                 }
             }
 
-            MessageType type = GetType(command, paramerters);
-            ServerMessage serverMessage = new ServerMessage(type, command, nick, paramerters, message);
+            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, message);
 
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Type: {type} Prefix: {prefix} Command: {command}");
-            foreach(var p in paramerters)
+            sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
+            foreach(var p in parameters)
             {
                 sb.Append($" Parameter: {p} ");
             }
@@ -138,9 +128,10 @@ namespace HappyIRCConsoleClient
             return serverMessage;
         }
 
-        private MessageType GetType(string command, List<string> parameters)
+        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string message)
         {
             MessageType type = MessageType.Unknown;
+            NumericReply numericReply = NumericReply.INVALID;
 
             if(command == "PRIVMSG")
             {
@@ -154,12 +145,21 @@ namespace HappyIRCConsoleClient
                 }
             }
 
-            if(int.TryParse(command, out int _))
+            if(int.TryParse(command, out int reply))
             {
-                type = MessageType.NumericResponse;
+                type = MessageType.NumericReply;
+                log.Debug($"Found numeric reply: {reply}");
+
+
+                if(Enum.IsDefined(typeof(NumericReply), reply))
+                {
+                    log.Debug($"Numeric reply is knwow: {numericReply}");
+                    numericReply = (NumericReply)reply;
+                }
             }
 
-            return type;
+            ServerMessage serverMessage = new ServerMessage(type, command, parameters, message, numericReply, nick);
+            return serverMessage;
         }
     }
 }
