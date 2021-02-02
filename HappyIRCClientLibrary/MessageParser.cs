@@ -53,36 +53,34 @@ namespace HappyIRCClientLibrary
 
         public ServerMessage ParseMessage(string message)
         {
-            string trailing = string.Empty;
-            string prefix = string.Empty;
-            string command = string.Empty;
-            string nick = string.Empty;
+            // Example:
+            // :userNick!~userNick@userhost PRIVMSG #Channel :message
+
+            string trailing = string.Empty; // Trailing text (ex message sent to a channel)
+            string prefix = string.Empty; // The prefix (nick and hostname)
+            string command = string.Empty; // The command
+            string nick = string.Empty; // Nick associated with command
+
             List<string> parameters = new List<string>();
-            int prefixEnd = -1;
-            int trailingStart = message.IndexOf(" :");
+            int prefixEnd = message.Length; // ending index of the prefix
+            int trailingStart = message.IndexOf(" :"); // Index where the trailing message begins
 
-            var components = message.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var queue = new Queue<string>(components);
-            var entry = string.Empty;
-
-            // Extract the prefix
-            if (queue.Count != 0)
+            // Extract the nick
+            if(message.IndexOf('!') > 1)
             {
-                entry = queue.Dequeue();
-                if (entry.StartsWith(":"))
-                {
-                    prefix = entry.Substring(1);
-                }
+                int nickEnd = message.IndexOf('!');
+                nick = message.Substring(1, nickEnd - 1);
             }
 
-            // Extract the Nick (Suspect logic error here...)
-            while (queue.Count > 0)
+            // Extract the prefix
+            if (message.StartsWith(':'))
             {
-                entry = queue.Dequeue();
-                if(entry.StartsWith("!"))
+                if (message.Contains(' '))
                 {
-                    nick = entry.Substring(1);
+                    prefixEnd = message.IndexOf(' ');
                 }
+
+                prefix = message.Substring(1, prefixEnd - 1);
             }
 
             // Exrtract trailing part of message
@@ -98,7 +96,7 @@ namespace HappyIRCClientLibrary
             // Extract command and parameters
             if (message.Length != 0)
             {
-                string[] commandAndParameters = message.Substring(prefixEnd + 1).Split(" ");
+                string[] commandAndParameters = message.Substring(prefixEnd).Split(" ");
                 if (commandAndParameters.Length > 1)
                 {
                     command = commandAndParameters[1];
@@ -113,7 +111,7 @@ namespace HappyIRCClientLibrary
                 }
             }
 
-            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, message);
+            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message);
 
 
             // Build the debug message
@@ -129,7 +127,7 @@ namespace HappyIRCClientLibrary
             return serverMessage;
         }
 
-        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string message)
+        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message)
         {
             MessageType type = MessageType.Unknown;
             NumericReply numericReply = NumericReply.INVALID;
@@ -159,7 +157,7 @@ namespace HappyIRCClientLibrary
                 }
             }
 
-            ServerMessage serverMessage = new ServerMessage(type, command, parameters, message, numericReply, nick);
+            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick);
             return serverMessage;
         }
     }
