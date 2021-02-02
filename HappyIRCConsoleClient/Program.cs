@@ -49,8 +49,13 @@ namespace HappyIRCConsoleClient
             Thread.Sleep(15000); // wait for it to connect... we should use an event later
             client.Join("#windows95");
 
-            Thread.Sleep(20000);
+            Thread.Sleep(1000);
+            client.SendMessage("#windows95", "I swear I'm not a bot!");
+
+            Thread.Sleep(40000);
             client.Part("#windows95");
+            Thread.Sleep(1000);
+            client.Disconnect();
         }
     }
 }

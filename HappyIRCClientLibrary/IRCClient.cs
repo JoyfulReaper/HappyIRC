@@ -106,6 +106,7 @@ namespace HappyIRCClientLibrary
         public void Disconnect()
         {
             SendMessageToServer("QUIT\r\n");
+            listenThread.Abort();
             client.Close();
             Connected = false;
         }
@@ -271,7 +272,7 @@ namespace HappyIRCClientLibrary
             ThrowIfNotConnected();
 
             log.Debug($"Attempting to message: {target} Message: {message}");
-            SendMessageToServer($"PRIVMSG {target} {message}");
+            SendMessageToServer($"PRIVMSG {target} :{message}\r\n");
 
             /*
              Possible Replies
