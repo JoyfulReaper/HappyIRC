@@ -25,6 +25,7 @@ SOFTWARE.
 
 
 using System;
+using System.Threading;
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +45,12 @@ namespace HappyIRCConsoleClient
 
             IRCClient client = new IRCClient("irc.quakenet.org", 6667, "HappyIRC", "HappyIRC", config);
             client.Connect();
+
+            Thread.Sleep(15000); // wait for it to connect... we should use an event later
+            client.Join("#windows95");
+
+            Thread.Sleep(20000);
+            client.Part("#windows95");
         }
     }
 }
