@@ -28,6 +28,9 @@ using log4net;
 
 namespace HappyIRCClientLibrary.Config
 {
+    /// <summary>
+    /// Represents any application configuration options
+    /// </summary>
     public interface IConfig
     {
         /// <summary>
