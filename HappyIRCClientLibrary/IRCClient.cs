@@ -85,6 +85,8 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public void Connect()
         {
+            // TODO We should fire an event on connect
+
             log.Debug($"Connecting to: {Server}:{Port}");
 
             client = new TcpClient(Server, Port);
@@ -214,7 +216,16 @@ namespace HappyIRCClientLibrary
                 throw new InvalidOperationException("The client is not connected to a server.");
             }
 
+            SendMessageToServer($"JOIN {channel}\r\n");
+            Channel chan = new Channel() { Name = channel };
 
+            /*Possible replies:
+            ERR_NEEDMOREPARAMS ERR_BANNEDFROMCHAN
+           ERR_INVITEONLYCHAN ERR_BADCHANNELKEY
+           ERR_CHANNELISFULL ERR_BADCHANMASK
+           ERR_NOSUCHCHANNEL ERR_TOOMANYCHANNELS
+           ERR_TOOMANYTARGETS ERR_UNAVAILRESOURCE
+           RPL_TOPIC */
         }
     }
 }
