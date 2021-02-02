@@ -25,6 +25,9 @@ SOFTWARE.
 
 namespace HappyIRCClientLibrary.Models
 {
+    /// <summary>
+    /// Represents a Channel
+    /// </summary>
     public class Channel
     {
         public string Name { get; set; }

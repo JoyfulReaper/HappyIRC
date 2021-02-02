@@ -30,6 +30,11 @@ namespace HappyIRCClientLibrary.Config
 {
     public interface IConfig
     {
+        /// <summary>
+        /// Get an instance of a logger
+        /// </summary>
+        /// <param name="name">The name of the logger</param>
+        /// <returns>A logger</returns>
         ILog GetLogger(string name);
     }
 }
