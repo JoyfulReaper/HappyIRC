@@ -26,6 +26,7 @@ SOFTWARE.
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,14 +37,14 @@ namespace HappyIRCConsoleClient
     {
         private static readonly IServiceProvider container = new ContainerBuilder().Build();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             IConfig config = container.GetRequiredService<IConfig>();
             var logger = config.GetLogger("IRCClient");
 
             logger.Error("test");
 
-            IRCClient client = new IRCClient("irc.quakenet.org", 6667, "HappyIRC", "HappyIRC", config);
+            IrcClient client = new IrcClient("irc.quakenet.org", 6667, "HappyIRC", "HappyIRC", config);
             client.Connect();
 
             Thread.Sleep(15000); // wait for it to connect... we should use an event later

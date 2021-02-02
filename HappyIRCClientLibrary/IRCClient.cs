@@ -32,13 +32,14 @@ using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary
 {
     /// <summary>
     /// Represents an IRC client
     /// </summary>
-    public class IRCClient
+    public class IrcClient
     {
         public string Server { get; private set; } // The IRC server to connect to
         public int Port { get; private set; } // The port to connect on
@@ -49,7 +50,7 @@ namespace HappyIRCClientLibrary
 
         private Thread listenThread; // Thread to listen to the server on
         private TcpClient client; // TcpClient connection to the server
-        private MessageParser messageParser; // Used to parse the server's response
+        private readonly MessageParser messageParser; // Used to parse the server's response
 
         private readonly IConfig config; 
         private readonly ILog log;
@@ -63,7 +64,7 @@ namespace HappyIRCClientLibrary
         /// <param name="nickname">The nickname to use</param>
         /// <param name="realname">The Real name to use</param>
         /// <param name="config">An instance of the Config class</param>
-        public IRCClient(
+        public IrcClient(
             string server,
             int port,
             string nickname,
@@ -95,7 +96,8 @@ namespace HappyIRCClientLibrary
             listenThread = new Thread(new ThreadStart(ListenThread));
             listenThread.Start();
 
-            Thread.Sleep(2000); // just wait a little before trying to give the NICK and USER commands
+            Thread.Sleep(2000);
+
             SendMessageToServer($"NICK {NickName}\r\n");
             SendMessageToServer($"USER {NickName} 0 * :{RealName}\r\n");
         }
