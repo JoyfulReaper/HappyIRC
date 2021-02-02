@@ -27,6 +27,7 @@ namespace HappyIRCClientLibrary
         ERR_TOOMANYTARGETS = 407, // "<target> :<error code> recipients. <abort message>"
         ERR_NICKNAMEINUSE = 433, // "<nick> :Nickname is already in use"
         ERR_UNAVAILRESOURCE = 437, // "<nick/channel> :Nick/channel is temporarily unavailable"
+        ERR_NOTONCHANNEL = 442, // "<channel> :You're not on that channel"
         ERR_NEEDMOREPARAMS = 461, // "<command> :Not enough parameters"
         ERR_BANNEDFROMCHAN = 474, // "<channel> :Cannot join channel (+b)"
         ERR_INVITEONLYCHAN = 473, // "<channel> :Cannot join channel (+i)"
