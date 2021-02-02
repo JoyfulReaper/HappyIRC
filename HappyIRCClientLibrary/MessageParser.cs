@@ -96,16 +96,21 @@ namespace HappyIRCClientLibrary
             // Extract command and parameters
             if (message.Length != 0)
             {
-                string[] commandAndParameters = message.Substring(prefixEnd).Split(" ");
+                string[] commandAndParameters = message.Substring(prefixEnd).Split(" ", StringSplitOptions.RemoveEmptyEntries);
                 if (commandAndParameters.Length > 1)
                 {
-                    command = commandAndParameters[1];
+                    command = commandAndParameters[0];
                 }
 
                 if (commandAndParameters.Length > 1)
                 {
                     for (int i = 1; i < commandAndParameters.Length; i++)
                     {
+                        if(commandAndParameters[i].StartsWith(":"))
+                        {
+                            break;
+                        }
+
                         parameters.Add(commandAndParameters[i]);
                     }
                 }
