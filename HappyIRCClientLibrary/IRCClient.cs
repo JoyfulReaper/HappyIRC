@@ -246,6 +246,8 @@ namespace HappyIRCClientLibrary
         /// <param name="channel">The channel to part</param>
         public void Part(string channel)
         {
+            //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
+
             ThrowIfNotConnected();
 
             log.Info($"Attemping to part channel: {channel}");
@@ -256,7 +258,28 @@ namespace HappyIRCClientLibrary
             /* Possible replies
            ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
            ERR_NOTONCHANNEL */
+        }
 
+        /// <summary>
+        /// Send a chat message
+        /// </summary>
+        /// <param name="target">The nick or channel to send the message to</param>
+        /// <param name="message">The message to send</param>
+        public void SendMessage(string target, string message)
+        {
+            //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
+            ThrowIfNotConnected();
+
+            log.Debug($"Attempting to message: {target} Message: {message}");
+            SendMessageToServer($"PRIVMSG {target} {message}");
+
+            /*
+             Possible Replies
+           ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
+           ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
+           ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
+           ERR_NOSUCHNICK
+           RPL_AWAY */
         }
     }
 }
