@@ -40,14 +40,14 @@ namespace HappyIRCConsoleClient
     /// </summary>
     public class MessageParser
     {
-        private readonly string nick; // User's nickname
+        private readonly string clientNick; // User's nickname
         private readonly IConfig config;
 
         private ILog log;
 
-        public MessageParser(string nick, IConfig config)
+        public MessageParser(string clientNick, IConfig config)
         {
-            this.nick = nick;
+            this.clientNick = clientNick;
             this.config = config;
             log = config.GetLogger("ParseMessage");
         }
@@ -62,7 +62,7 @@ namespace HappyIRCConsoleClient
             int prefixEnd = -1;
             int trailingStart = message.IndexOf(" :");
 
-            var components = message.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            var components = message.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var queue = new Queue<string>(components);
             var entry = string.Empty;
 
@@ -116,6 +116,8 @@ namespace HappyIRCConsoleClient
 
             ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, message);
 
+
+            // Build the debug message
             StringBuilder sb = new StringBuilder();
             sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
             foreach(var p in parameters)
@@ -135,7 +137,7 @@ namespace HappyIRCConsoleClient
 
             if(command == "PRIVMSG")
             {
-                if(parameters[0] == nick)
+                if(parameters[0] == clientNick) // I think this should be one...
                 {
                     type = MessageType.PrivateMessage;
                 }
@@ -153,8 +155,8 @@ namespace HappyIRCConsoleClient
 
                 if(Enum.IsDefined(typeof(NumericReply), reply))
                 {
-                    log.Debug($"Numeric reply is knwow: {numericReply}");
                     numericReply = (NumericReply)reply;
+                    log.Debug($"I know the numeric reply as: {numericReply}");
                 }
             }
 
