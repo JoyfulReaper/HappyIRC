@@ -25,15 +25,14 @@ SOFTWARE.
 
 // TODO This will need some cleanup or probably a re-write.
 
-using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
-using HappyIRCConsoleClient.Models;
+using HappyIRCClientLibrary.Models;
 using log4net;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HappyIRCConsoleClient
+namespace HappyIRCClientLibrary
 {
     /// <summary>
     /// Parse the IRC server'c reply

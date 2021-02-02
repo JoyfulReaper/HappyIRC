@@ -23,11 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary;
 using System;
 using System.Collections.Generic;
 
-namespace HappyIRCConsoleClient.Models
+namespace HappyIRCClientLibrary.Models
 {
     /// <summary>
     /// Represents a Message from the IRC server

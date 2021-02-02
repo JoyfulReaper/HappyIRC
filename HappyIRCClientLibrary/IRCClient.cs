@@ -30,8 +30,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System;
-using HappyIRCConsoleClient;
-using HappyIRCConsoleClient.Models;
+using HappyIRCClientLibrary.Models;
 
 namespace HappyIRCClientLibrary
 {
@@ -45,6 +44,7 @@ namespace HappyIRCClientLibrary
         public string NickName { get; private set; } // The Nickname to connect with
         public string RealName { get; private set; } // The Realname to connect with
         public bool Connected { get; private set; } // True if connected
+        public List<Channel> MyProperty { get; set; }
 
         private Thread listenThread; // Thread to listen to the server on
         private TcpClient client; // TcpClient connection to the server
@@ -152,6 +152,10 @@ namespace HappyIRCClientLibrary
             }
         }
 
+        /// <summary>
+        /// Check to see if we are conneceted. We send the messages here until we are connected.
+        /// </summary>
+        /// <param name="message">Server message</param>
         private void ConnectionHelper(ServerMessage message)
         {
             if(message.ResponseCode == NumericReply.ERR_NICKNAMEINUSE)
@@ -194,6 +198,23 @@ namespace HappyIRCClientLibrary
 
             log.Debug($"Sending: {message}");
             ns.Write(writeBuffer, 0, writeBuffer.Length);
+        }
+
+        ////////////////////////////// NOTE: This stuff will probably be re-factored into a different class ///////////////////////////
+        
+        /// <summary>
+        /// Join a channel
+        /// </summary>
+        /// <param name="channel"></param>
+        public void Join(string channel)
+        {
+            if(!Connected)
+            {
+                log.Error("Client is not connected to a server");
+                throw new InvalidOperationException("The client is not connected to a server.");
+            }
+
+
         }
     }
 }

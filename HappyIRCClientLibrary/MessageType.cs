@@ -24,7 +24,7 @@ SOFTWARE.
 */
 
 
-namespace HappyIRCConsoleClient
+namespace HappyIRCClientLibrary
 {
     public enum MessageType
     {
