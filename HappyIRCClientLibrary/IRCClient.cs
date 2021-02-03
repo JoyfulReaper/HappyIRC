@@ -156,7 +156,7 @@ namespace HappyIRCClientLibrary
         /// <param name="message">Server message</param>
         private void ConnectionHelper(ServerMessage message)
         {
-            if(message.ResponseCode == NumericReply.ERR_NICKNAMEINUSE)
+            if(message.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
             {
                 log.Fatal("Server reports Nick is in use, unable to connect.");
                 log.Fatal("Quitting");
@@ -164,7 +164,7 @@ namespace HappyIRCClientLibrary
                 Disconnect();
                 Environment.Exit(0);
             } 
-            else if(message.ResponseCode == NumericReply.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
+            else if(message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
             }

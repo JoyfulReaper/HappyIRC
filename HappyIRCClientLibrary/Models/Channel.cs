@@ -32,13 +32,25 @@ namespace HappyIRCClientLibrary.Models
     /// </summary>
     public class Channel
     {
+        /// <summary>
+        /// Name of the channel
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Send a message to this channel
+        /// </summary>
+        /// <param name="message">The message to send</param>
         public void SendMessage(string message)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Called when a message is sent to this channel
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void ReceiveMessage(object sender, EventArgs e)
         {
             throw new NotImplementedException();

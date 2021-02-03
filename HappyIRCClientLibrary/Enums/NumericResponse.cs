@@ -25,7 +25,7 @@ SOFTWARE.
 
 namespace HappyIRCClientLibrary.Enums
 {
-    public enum NumericReply
+    public enum NumericResponse
     {
         // 001 to 004 indicates the connection was successful
         INVALID = 0,

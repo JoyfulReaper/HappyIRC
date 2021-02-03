@@ -26,7 +26,10 @@ SOFTWARE.
 
 namespace HappyIRCClientLibrary.Enums
 {
-    public enum MessageType
+    /// <summary>
+    /// Represents the type of a 
+    /// </summary>
+    public enum CommandType
     {
         Unknown, ChannelMessage, PrivateMessage, NumericReply,
     }

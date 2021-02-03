@@ -119,7 +119,6 @@ namespace HappyIRCClientLibrary.Parsers
 
             ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message);
 
-
             // Build the debug message
             StringBuilder sb = new StringBuilder();
             sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
@@ -135,30 +134,30 @@ namespace HappyIRCClientLibrary.Parsers
 
         private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message)
         {
-            MessageType type = MessageType.Unknown;
-            NumericReply numericReply = NumericReply.INVALID;
+            CommandType type = CommandType.Unknown;
+            NumericResponse numericReply = NumericResponse.INVALID;
 
             if(command == "PRIVMSG")
             {
                 if(parameters[0] == clientNick) // I think this should be one...
                 {
-                    type = MessageType.PrivateMessage;
+                    type = CommandType.PrivateMessage;
                 }
                 else
                 {
-                    type = MessageType.ChannelMessage;
+                    type = CommandType.ChannelMessage;
                 }
             }
 
             if(int.TryParse(command, out int reply))
             {
-                type = MessageType.NumericReply;
+                type = CommandType.NumericReply;
                 log.Debug($"Found numeric reply: {reply}");
 
 
-                if(Enum.IsDefined(typeof(NumericReply), reply))
+                if(Enum.IsDefined(typeof(NumericResponse), reply))
                 {
-                    numericReply = (NumericReply)reply;
+                    numericReply = (NumericResponse)reply;
                     log.Debug($"I know the numeric reply as: {numericReply}");
                 }
             }
