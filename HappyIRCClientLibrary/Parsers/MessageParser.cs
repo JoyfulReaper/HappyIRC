@@ -33,7 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Parsers
 {
     /// <summary>
     /// Parse the IRC server'c reply
@@ -43,7 +43,7 @@ namespace HappyIRCClientLibrary
         private readonly string clientNick; // User's nickname
         private readonly IConfig config;
 
-        private ILog log;
+        private readonly ILog log;
 
         public MessageParser(string clientNick, IConfig config)
         {

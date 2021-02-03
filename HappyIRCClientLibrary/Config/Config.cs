@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 using log4net;
 using log4net.Config;
 using log4net.Repository;
@@ -35,7 +34,7 @@ namespace HappyIRCClientLibrary.Config
 {
     public class Config : IConfig
     {
-        private ILoggerRepository logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+        private readonly ILoggerRepository logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
         public Config()
         {

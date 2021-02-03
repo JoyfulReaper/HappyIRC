@@ -33,6 +33,7 @@ using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
 using HappyIRCClientLibrary.Enums;
+using HappyIRCClientLibrary.Parsers;
 
 namespace HappyIRCClientLibrary
 {
@@ -41,10 +42,9 @@ namespace HappyIRCClientLibrary
     /// </summary>
     public class IrcClient
     {
-        public string Server { get; private set; } // The IRC server to connect to
-        public int Port { get; private set; } // The port to connect on
-        public string NickName { get; private set; } // The Nickname to connect with
-        public string RealName { get; private set; } // The Realname to connect with
+        public Server Server { get; private set; } // The IRC server to connect to
+        public User User { get; private set; } // The user to connect as
+
         public bool Connected { get; private set; } // True if connected
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
 
@@ -52,34 +52,26 @@ namespace HappyIRCClientLibrary
         private TcpClient client; // TcpClient connection to the server
         private readonly MessageParser messageParser; // Used to parse the server's response
 
-        private readonly IConfig config; 
         private readonly ILog log;
+        private readonly IConfig config;
 
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
         /// <param name="server">The IRC server to connect to</param>
-        /// <param name="port">The port to connect on</param>
-        /// <param name="nickname">The nickname to use</param>
-        /// <param name="realname">The Real name to use</param>
         /// <param name="config">An instance of the Config class</param>
         public IrcClient(
-            string server,
-            int port,
-            string nickname,
-            string realname,
+            Server server,
+            User user,
             IConfig config)
         {
             Server = server;
-            Port = port;
-            NickName = nickname;
-            RealName = realname;
-
+            User = user;
             this.config = config;
-            log = config.GetLogger("IRCClientLib");
 
-            messageParser = new MessageParser(NickName, config);
+            log = config.GetLogger("IRCClientLib");
+            messageParser = new MessageParser(user.NickName, config);
         }
 
         /// <summary>
@@ -89,17 +81,17 @@ namespace HappyIRCClientLibrary
         {
             // TODO We should fire an event on connect
 
-            log.Debug($"Connecting to: {Server}:{Port}");
+            log.Debug($"Connecting to: {Server.ServerAddress}:{Server.Port}");
 
-            client = new TcpClient(Server, Port);
+            client = new TcpClient(Server.ServerAddress, Server.Port);
 
             listenThread = new Thread(new ThreadStart(ListenThread));
             listenThread.Start();
 
             Thread.Sleep(2000);
 
-            SendMessageToServer($"NICK {NickName}\r\n");
-            SendMessageToServer($"USER {NickName} 0 * :{RealName}\r\n");
+            SendMessageToServer($"NICK {User.NickName}\r\n");
+            SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
         }
 
         /// <summary>

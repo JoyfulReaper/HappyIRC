@@ -27,21 +27,20 @@ SOFTWARE.
 using HappyIRCClientLibrary.Config;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Threading.Tasks;
 
 namespace HappyIRCConsoleClient
 {
     public class ContainerBuilder
     {
-        public IServiceProvider Build()
+        public static IServiceProvider BuildContainer()
         {
-            IConfig config = new Config();
+            var serviceProvider = new ServiceCollection();
 
-            var container = new ServiceCollection();
+            serviceProvider.AddTransient<IConfig, Config>()
+                .AddTransient(_ => serviceProvider);
 
-            container.AddSingleton(_ => config)
-                .AddSingleton(_ => container);
-
-            return container.BuildServiceProvider();
+            return serviceProvider.BuildServiceProvider();
         }
     }
 }

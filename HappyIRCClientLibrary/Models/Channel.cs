@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+
 namespace HappyIRCClientLibrary.Models
 {
     /// <summary>
@@ -31,5 +33,15 @@ namespace HappyIRCClientLibrary.Models
     public class Channel
     {
         public string Name { get; set; }
+
+        public void SendMessage(string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReceiveMessage(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
