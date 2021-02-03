@@ -22,12 +22,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+using System;
 
-
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Models
 {
-    public enum MessageType
+    public class Server
     {
-        Unknown, ChannelMessage, PrivateMessage, NumericReply,
+        public string ServerAddress { get; private set; }
+        public int Port { get; private set; }
+
+        public Server(string serverAddress, int port)
+        {
+            ServerAddress = serverAddress;
+            Port = port;
+        }
     }
 }

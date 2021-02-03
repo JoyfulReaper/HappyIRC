@@ -29,22 +29,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
+using HappyIRCClientLibrary.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyIRCConsoleClient
 {
     class Program
     {
-        private static readonly IServiceProvider container = new ContainerBuilder().Build();
-
         static async Task Main(string[] args)
         {
-            IConfig config = container.GetRequiredService<IConfig>();
-            var logger = config.GetLogger("IRCClient");
+            var serviceProvider = ContainerBuilder.BuildContainer();
 
-            logger.Error("test");
+            Server server = new Server("irc.quakenet.org", 6667);
+            User user = new User("HappyIRC", "Happy IRC!");
 
-            IrcClient client = new IrcClient("irc.quakenet.org", 6667, "HappyIRC", "HappyIRC", config);
+            IrcClient client = new IrcClient(server, user, serviceProvider.GetRequiredService<IConfig>());
             client.Connect();
 
             Thread.Sleep(15000); // wait for it to connect... we should use an event later

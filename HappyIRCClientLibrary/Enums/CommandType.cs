@@ -23,37 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
 
-namespace HappyIRCClientLibrary.Models
+namespace HappyIRCClientLibrary.Enums
 {
     /// <summary>
-    /// Represents a Channel
+    /// Represents the type of a 
     /// </summary>
-    public class Channel
+    public enum CommandType
     {
-        /// <summary>
-        /// Name of the channel
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Send a message to this channel
-        /// </summary>
-        /// <param name="message">The message to send</param>
-        public void SendMessage(string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Called when a message is sent to this channel
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ReceiveMessage(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
+        Unknown, ChannelMessage, PrivateMessage, NumericReply,
     }
 }

@@ -24,30 +24,39 @@ SOFTWARE.
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Models
 {
-    /// <summary>
-    /// Represents a Channel
-    /// </summary>
-    public class Channel
+    public class User
     {
         /// <summary>
-        /// Name of the channel
+        /// User's Nick
         /// </summary>
-        public string Name { get; set; }
+        public string NickName { get; set; }
 
         /// <summary>
-        /// Send a message to this channel
+        /// User's Real Name
         /// </summary>
-        /// <param name="message">The message to send</param>
+        public string RealName { get; set; }
+
+        public User(string nickName, string realName)
+        {
+            NickName = nickName;
+            RealName = realName;
+        }
+
+        /// <summary>
+        /// Send a private message to this user
+        /// </summary>
+        /// <param name="message"></param>
         public void SendMessage(string message)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Called when a message is sent to this channel
+        /// Called when a private message is receive from this user
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
+using HappyIRCClientLibrary.Enums;
 using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Models
@@ -33,16 +33,16 @@ namespace HappyIRCClientLibrary.Models
     /// </summary>
     public class ServerMessage
     {
-        public MessageType Type { get; private set; }
+        public CommandType Type { get; private set; }
         public List<string> Parameters { get; private set; }
         public string Message { get; private set; }
         public string Nick { get; private set; }
         public string Command { get; private set; }
         public string Channel => Parameters[1];
         public string Trailing { get; private set; }
-        public NumericReply ResponseCode { get; private set; }
+        public NumericResponse ResponseCode { get; private set; }
 
-        public ServerMessage(MessageType type, string command, List<string> parameters, string trailing, string message, NumericReply response, string nick)
+        public ServerMessage(CommandType type, string command, List<string> parameters, string trailing, string message, NumericResponse response, string nick)
         {
             Trailing = trailing;
             Type = type;
