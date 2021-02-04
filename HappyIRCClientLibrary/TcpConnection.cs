@@ -127,7 +127,7 @@ namespace HappyIRCClientLibrary
             //TODO Error checking
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
 
-            log.Debug($"Sending: {message}");
+            log.Debug($"Sending: {message}".Replace("\r'", "").Replace("\n", ""));
             networkStream.Write(writeBuffer, 0, writeBuffer.Length);
         }
 
