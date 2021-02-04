@@ -104,7 +104,8 @@ namespace HappyIRCClientLibrary
             else if (message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
-                //Tell the IRC Client somehow damn it!
+                log.Info("!!!!!!!!!I THINK WE ARE CONNECTED NOW!!!!!!!!");
+                //ircClient.Connected = true;  //Maybe an event?
             }
         }
 
@@ -116,6 +117,12 @@ namespace HappyIRCClientLibrary
         {
             string response = $"PONG {ping.Substring(5)}\r\n"; // we just reply with the same thing the server send minus "PING "
             ircClient.SendMessageToServer(response);
+        }
+
+        public void Close()
+        {
+            //TODO Error checking
+            client.Close();
         }
     }
 }

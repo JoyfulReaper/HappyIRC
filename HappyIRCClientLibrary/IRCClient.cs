@@ -31,7 +31,6 @@ using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
-using HappyIRCClientLibrary.Parsers;
 
 namespace HappyIRCClientLibrary
 {
@@ -42,7 +41,7 @@ namespace HappyIRCClientLibrary
     {
         public Server Server { get; private set; } // The IRC server to connect to
         public User User { get; private set; } // The user to connect as
-        public bool Connected { get; private set; } = false;// True if connected
+        public bool Connected { get; private set; } = true;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
 
@@ -76,8 +75,8 @@ namespace HappyIRCClientLibrary
             tcpListenThread = new Thread(new ParameterizedThreadStart(tcpListener.ServerListener));
             tcpListenThread.Start(Server);
 
-            Thread.Sleep(10000);
-            log.Info($"ARE WE CONNECTED?: {tcpListener.Connected}");
+            // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
+            Thread.Sleep(10000); 
 
             SendMessageToServer($"NICK {User.NickName}\r\n");
             SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
@@ -89,8 +88,8 @@ namespace HappyIRCClientLibrary
         public void Disconnect()
         {
             SendMessageToServer("QUIT\r\n");
+            tcpListener.Close();
             tcpListenThread.Abort();
-            //client.Close();
             Connected = false;
         }
 
@@ -107,7 +106,6 @@ namespace HappyIRCClientLibrary
         /// <param name="message"></param>
         public void SendMessageToServer(string message)
         {
-            //NetworkStream ns = client.GetStream();
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
 
             log.Debug($"Sending: {message}");
@@ -123,7 +121,7 @@ namespace HappyIRCClientLibrary
             }
         }
 
-        ////////////////////////////// !!!NOTE: This stuff will probably be re-factored into a different class!!! ///////////////////////////
+        ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
 
         /// <summary>
         /// Join a channel
