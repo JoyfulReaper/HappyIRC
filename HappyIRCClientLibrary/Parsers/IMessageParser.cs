@@ -23,39 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Threading;
-using System.Threading.Tasks;
-using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Models;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace HappyIRCConsoleClient
+namespace HappyIRCClientLibrary.Parsers
 {
-    class Program
+    public interface IMessageParser
     {
-        static async Task Main(string[] args)
-        {
-            var serviceProvider = ContainerBuilder.BuildContainer();
-
-            Server server = new Server("irc.quakenet.org", 6667);
-            User user = new User("HappyIRC", "Happy IRC!");
-
-            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();
-            IrcClient client = iclient as IrcClient;
-
-            client.Initialize(server, user);
-            client.Connect();
-
-            Thread.Sleep(15000); // wait for it to connect... we should use an event later
-            client.Join("#windows95");
-
-            Thread.Sleep(1000);
-            client.SendMessage("#windows95", "I swear I'm not a bot!");
-
-            Thread.Sleep(40000);
-            client.Part("#windows95");
-            Thread.Sleep(1000);
-            client.Disconnect();
-        }
+        ServerMessage ParseMessage(string message);
     }
 }

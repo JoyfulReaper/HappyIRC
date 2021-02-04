@@ -38,16 +38,16 @@ namespace HappyIRCClientLibrary.Parsers
     /// <summary>
     /// Parse the IRC server'c reply
     /// </summary>
-    public class MessageParser
+    public class MessageParser : IMessageParser
     {
         private readonly string clientNick; // User's nickname
         private readonly IConfig config;
 
         private readonly ILog log;
 
-        public MessageParser(string clientNick, IConfig config)
+        public MessageParser(string nick, IConfig config)
         {
-            this.clientNick = clientNick;
+            this.clientNick = nick;
             this.config = config;
             log = config.GetLogger("ParseMessage");
         }
@@ -67,7 +67,7 @@ namespace HappyIRCClientLibrary.Parsers
             int trailingStart = message.IndexOf(" :"); // Index where the trailing message begins
 
             // Extract the nick
-            if(message.IndexOf('!') > 1)
+            if (message.IndexOf('!') > 1)
             {
                 int nickEnd = message.IndexOf('!');
                 nick = message.Substring(1, nickEnd - 1);
@@ -107,7 +107,7 @@ namespace HappyIRCClientLibrary.Parsers
                 {
                     for (int i = 1; i < commandAndParameters.Length; i++)
                     {
-                        if(commandAndParameters[i].StartsWith(":"))
+                        if (commandAndParameters[i].StartsWith(":"))
                         {
                             break;
                         }
@@ -117,12 +117,12 @@ namespace HappyIRCClientLibrary.Parsers
                 }
             }
 
-            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message);
+            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message, prefix);
 
             // Build the debug message
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
-            foreach(var p in parameters)
+            sb.Append($"Nick: {serverMessage.Nick} Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
+            foreach (var p in parameters)
             {
                 sb.Append($" Parameter: {p} ");
             }
@@ -132,14 +132,15 @@ namespace HappyIRCClientLibrary.Parsers
             return serverMessage;
         }
 
-        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message)
+        //TODO I think Factory Pattern can improve this, look into that
+        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message, string prefix)
         {
             CommandType type = CommandType.Unknown;
             NumericResponse numericReply = NumericResponse.INVALID;
 
-            if(command == "PRIVMSG")
+            if (command == "PRIVMSG")
             {
-                if(parameters[0] == clientNick) // I think this should be one...
+                if (parameters[0] == clientNick) // I think this should be one...
                 {
                     type = CommandType.PrivateMessage;
                 }
@@ -149,20 +150,20 @@ namespace HappyIRCClientLibrary.Parsers
                 }
             }
 
-            if(int.TryParse(command, out int reply))
+            if (int.TryParse(command, out int reply))
             {
                 type = CommandType.NumericReply;
                 log.Debug($"Found numeric reply: {reply}");
 
 
-                if(Enum.IsDefined(typeof(NumericResponse), reply))
+                if (Enum.IsDefined(typeof(NumericResponse), reply))
                 {
                     numericReply = (NumericResponse)reply;
                     log.Debug($"I know the numeric reply as: {numericReply}");
                 }
             }
 
-            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick);
+            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick, prefix);
             return serverMessage;
         }
     }

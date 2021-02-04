@@ -23,11 +23,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
+using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
+using HappyIRCClientLibrary.Parsers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Threading.Tasks;
 
 namespace HappyIRCConsoleClient
 {
@@ -37,7 +37,10 @@ namespace HappyIRCConsoleClient
         {
             var serviceProvider = new ServiceCollection();
 
-            serviceProvider.AddTransient<IConfig, Config>()
+            serviceProvider
+                .AddTransient<IConfig, Config>()
+                //.AddTransient<IMessageParser, MessageParser>()
+                .AddTransient<IIrcClient, IrcClient>()
                 .AddTransient(_ => serviceProvider);
 
             return serviceProvider.BuildServiceProvider();

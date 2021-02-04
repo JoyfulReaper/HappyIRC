@@ -40,10 +40,13 @@ namespace HappyIRCClientLibrary.Models
         public string Command { get; private set; }
         public string Channel => Parameters[1];
         public string Trailing { get; private set; }
+        public string Prefix { get; private set; }
         public NumericResponse ResponseCode { get; private set; }
 
-        public ServerMessage(CommandType type, string command, List<string> parameters, string trailing, string message, NumericResponse response, string nick)
+        // TODO Maybe re-arange the parameters so the order makes more sense
+        public ServerMessage(CommandType type, string command, List<string> parameters, string trailing, string message, NumericResponse response, string nick, string prefix)
         {
+            Prefix = prefix;
             Trailing = trailing;
             Type = type;
             Command = command;
