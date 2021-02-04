@@ -117,11 +117,11 @@ namespace HappyIRCClientLibrary.Parsers
                 }
             }
 
-            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message);
+            ServerMessage serverMessage = CreateServerMessage(command, nick, parameters, trailing, message, prefix);
 
             // Build the debug message
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
+            sb.Append($"Nick: {serverMessage.Nick} Type: {serverMessage.Type} Prefix: {prefix} Command: {command}");
             foreach (var p in parameters)
             {
                 sb.Append($" Parameter: {p} ");
@@ -132,7 +132,8 @@ namespace HappyIRCClientLibrary.Parsers
             return serverMessage;
         }
 
-        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message)
+        //TODO I think Factory Pattern can improve this, look into that
+        private ServerMessage CreateServerMessage(string command, string nick, List<string> parameters, string trailing, string message, string prefix)
         {
             CommandType type = CommandType.Unknown;
             NumericResponse numericReply = NumericResponse.INVALID;
@@ -162,7 +163,7 @@ namespace HappyIRCClientLibrary.Parsers
                 }
             }
 
-            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick);
+            ServerMessage serverMessage = new ServerMessage(type, command, parameters, trailing, message, numericReply, nick, prefix);
             return serverMessage;
         }
     }
