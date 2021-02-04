@@ -26,7 +26,6 @@ SOFTWARE.
 using HappyIRCClientLibrary.Config;
 using log4net;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
@@ -76,7 +75,7 @@ namespace HappyIRCClientLibrary
             tcpConnectionThread.Start(Server);
 
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
-            Thread.Sleep(8000); 
+            Thread.Sleep(4000); 
 
             tcpConnection.SendMessageToServer($"NICK {User.NickName}\r\n");
             tcpConnection.SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
