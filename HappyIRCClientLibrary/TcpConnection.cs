@@ -10,7 +10,7 @@ using System.Text;
 
 namespace HappyIRCClientLibrary
 {
-    public class ListenThread
+    public class TcpConnection
     {
         public bool Connected { get; private set; }
 
@@ -21,7 +21,7 @@ namespace HappyIRCClientLibrary
 
         private NetworkStream networkStream;
 
-        public ListenThread( 
+        public TcpConnection( 
             IrcClient ircClient,
             IConfig config)
         {
@@ -82,10 +82,10 @@ namespace HappyIRCClientLibrary
             }
         }
 
-        public NetworkStream GetNetworkStream()
-        {
-            return networkStream;
-        }
+        //public NetworkStream GetNetworkStream()
+        //{
+        //    return networkStream;
+        //}
 
         /// <summary>
         /// Check to see if we are conneceted. We send the messages here until we are connected.
@@ -105,7 +105,6 @@ namespace HappyIRCClientLibrary
             {
                 Connected = true;
                 log.Info("!!!!!!!!!I THINK WE ARE CONNECTED NOW!!!!!!!!");
-                //ircClient.Connected = true;  //Maybe an event?
             }
         }
 
@@ -116,7 +115,20 @@ namespace HappyIRCClientLibrary
         private void RespondToPing(string ping)
         {
             string response = $"PONG {ping.Substring(5)}\r\n"; // we just reply with the same thing the server send minus "PING "
-            ircClient.SendMessageToServer(response);
+            SendMessageToServer(response);
+        }
+
+        /// <summary>
+        /// Send a message to the IRC server
+        /// </summary>
+        /// <param name="message"></param>
+        public void SendMessageToServer(string message)
+        {
+            //TODO Error checking
+            byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
+
+            log.Debug($"Sending: {message}");
+            networkStream.Write(writeBuffer, 0, writeBuffer.Length);
         }
 
         public void Close()
