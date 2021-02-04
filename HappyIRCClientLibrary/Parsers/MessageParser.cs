@@ -45,9 +45,9 @@ namespace HappyIRCClientLibrary.Parsers
 
         private readonly ILog log;
 
-        public MessageParser(string clientNick, IConfig config)
+        public MessageParser(string nick, IConfig config)
         {
-            this.clientNick = clientNick;
+            this.clientNick = nick;
             this.config = config;
             log = config.GetLogger("ParseMessage");
         }

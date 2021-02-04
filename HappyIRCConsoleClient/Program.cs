@@ -23,12 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-using System;
-using System.Threading;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary;
-using HappyIRCClientLibrary.Config;
 using HappyIRCClientLibrary.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,7 +39,6 @@ namespace HappyIRCConsoleClient
             Server server = new Server("irc.quakenet.org", 6667);
             User user = new User("HappyIRC", "Happy IRC!");
 
-            //IrcClient client = new IrcClient(server, user, serviceProvider.GetRequiredService<IConfig>());
             IIrcClient client = serviceProvider.GetRequiredService<IIrcClient>();
             client.Initialize(server, user);
             client.Connect();

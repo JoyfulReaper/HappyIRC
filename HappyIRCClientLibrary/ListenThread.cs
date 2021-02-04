@@ -12,17 +12,20 @@ namespace HappyIRCClientLibrary
 {
     public class ListenThread
     {
+        public bool Connected { get; private set; }
+
         private readonly IMessageParser messageParser;
         private readonly IrcClient ircClient;
         private TcpClient client; // TcpClient connection to the server
         private readonly ILog log;
-        private bool connected = false;
 
-        public ListenThread(IMessageParser messageParser, 
+        private NetworkStream networkStream;
+
+        public ListenThread( 
             IrcClient ircClient,
             IConfig config)
         {
-            this.messageParser = messageParser;
+            this.messageParser = new MessageParser(ircClient.User.NickName, config);
             this.ircClient = ircClient;
             this.log = config.GetLogger("ListenThread");
         }
@@ -40,13 +43,13 @@ namespace HappyIRCClientLibrary
             }
 
             client = new TcpClient(server.ServerAddress, server.Port);
-            NetworkStream networkstream = client.GetStream();
+            networkStream = client.GetStream();
             Queue<string> messageQueue = new Queue<string>();
 
             while (true)
             {
                 byte[] bytes = new byte[1024]; // Read buffer
-                int bytesRead = networkstream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
+                int bytesRead = networkStream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
 
                 var message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
                 var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
@@ -66,7 +69,7 @@ namespace HappyIRCClientLibrary
                     else
                     {
                         var response = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
-                        if (!connected)
+                        if (!Connected)
                         {
                             ConnectionHelper(response); // We aren't connected yet, boo!
                         }
@@ -77,6 +80,11 @@ namespace HappyIRCClientLibrary
                     }
                 }
             }
+        }
+
+        public NetworkStream GetNetworkStream()
+        {
+            return networkStream;
         }
 
         /// <summary>
@@ -95,7 +103,7 @@ namespace HappyIRCClientLibrary
             }
             else if (message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
             {
-                connected = true;
+                Connected = true;
                 //Tell the IRC Client somehow damn it!
             }
         }

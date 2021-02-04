@@ -43,9 +43,9 @@ namespace HappyIRCClientLibrary
         public Server Server { get; private set; } // The IRC server to connect to
         public User User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
-        public bool Initialized { get; private set; } = false;
+        public bool Initialized { get; private set; } = false; // True if Initialized()
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
-        private MessageParser messageParser; // Used to parse the server's response
+
         private readonly ILog log;
         private readonly IConfig config;
         private ListenThread tcpListener;
@@ -76,7 +76,8 @@ namespace HappyIRCClientLibrary
             tcpListenThread = new Thread(new ParameterizedThreadStart(tcpListener.ServerListener));
             tcpListenThread.Start(Server);
 
-            Thread.Sleep(2000);
+            Thread.Sleep(10000);
+            log.Info($"ARE WE CONNECTED?: {tcpListener.Connected}");
 
             SendMessageToServer($"NICK {User.NickName}\r\n");
             SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
@@ -110,7 +111,7 @@ namespace HappyIRCClientLibrary
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
 
             log.Debug($"Sending: {message}");
-            //ns.Write(writeBuffer, 0, writeBuffer.Length);
+            tcpListener.GetNetworkStream().Write(writeBuffer, 0, writeBuffer.Length);
         }
 
         private void ThrowIfNotConnected()
@@ -196,8 +197,7 @@ namespace HappyIRCClientLibrary
         {
             Server = server;
             User = user;
-            messageParser = new MessageParser(user.NickName, config);
-            tcpListener = new ListenThread(messageParser, this, config);
+            tcpListener = new ListenThread(this, config);
         }
     }
 }
