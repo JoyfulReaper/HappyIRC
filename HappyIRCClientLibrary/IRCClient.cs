@@ -41,14 +41,14 @@ namespace HappyIRCClientLibrary
     {
         public Server Server { get; private set; } // The IRC server to connect to
         public User User { get; private set; } // The user to connect as
-        public bool Connected { get; private set; } = true;// True if connected
+        public bool Connected { get; private set; } = false;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
 
         private readonly ILog log;
         private readonly IConfig config;
-        private ListenThread tcpListener;
-        private Thread tcpListenThread;
+        private TcpConnection tcpConnection;
+        private Thread tcpConnectionThread;
 
 
         /// <summary>
@@ -72,14 +72,21 @@ namespace HappyIRCClientLibrary
 
             log.Debug($"Connecting to: {Server.ServerAddress}:{Server.Port}");
 
-            tcpListenThread = new Thread(new ParameterizedThreadStart(tcpListener.ServerListener));
-            tcpListenThread.Start(Server);
+            tcpConnectionThread = new Thread(new ParameterizedThreadStart(tcpConnection.ServerListener));
+            tcpConnectionThread.Start(Server);
 
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
-            Thread.Sleep(10000); 
+            Thread.Sleep(8000); 
 
-            SendMessageToServer($"NICK {User.NickName}\r\n");
-            SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
+            tcpConnection.SendMessageToServer($"NICK {User.NickName}\r\n");
+            tcpConnection.SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
+
+            while (!tcpConnection.Connected)
+            {
+                Thread.Sleep(1000);
+            }
+
+            Connected = true;
         }
 
         /// <summary>
@@ -87,9 +94,11 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public void Disconnect()
         {
+            ThrowIfNotConnectedOrInitialized();
+
             SendMessageToServer("QUIT\r\n");
-            tcpListener.Close();
-            tcpListenThread.Abort();
+            tcpConnection.Close();
+            tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
             Connected = false;
         }
 
@@ -106,18 +115,22 @@ namespace HappyIRCClientLibrary
         /// <param name="message"></param>
         public void SendMessageToServer(string message)
         {
-            byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
+            ThrowIfNotConnectedOrInitialized();
 
-            log.Debug($"Sending: {message}");
-            tcpListener.GetNetworkStream().Write(writeBuffer, 0, writeBuffer.Length);
+            tcpConnection.SendMessageToServer(message);
         }
 
-        private void ThrowIfNotConnected()
+        private void ThrowIfNotConnectedOrInitialized()
         {
             if (!Connected)
             {
                 log.Error("Client is not connected to a server");
                 throw new InvalidOperationException("The client is not connected to a server.");
+            }
+            if (!Initialized)
+            {
+                log.Error("Client is not initialized");
+                throw new InvalidOperationException("The Client is not initialized.");
             }
         }
 
@@ -131,7 +144,7 @@ namespace HappyIRCClientLibrary
         {
             //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
 
-            ThrowIfNotConnected();
+            ThrowIfNotConnectedOrInitialized();
 
             log.Info($"Attemping to join channel: {channel}");
             SendMessageToServer($"JOIN {channel}\r\n");
@@ -157,7 +170,7 @@ namespace HappyIRCClientLibrary
         {
             //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
 
-            ThrowIfNotConnected();
+            ThrowIfNotConnectedOrInitialized();
 
             log.Info($"Attemping to part channel: {channel}");
             SendMessageToServer($"PART {channel}\r\n");
@@ -177,7 +190,7 @@ namespace HappyIRCClientLibrary
         public void SendMessage(string target, string message)
         {
             //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-            ThrowIfNotConnected();
+            ThrowIfNotConnectedOrInitialized();
 
             log.Debug($"Attempting to message: {target} Message: {message}");
             SendMessageToServer($"PRIVMSG {target} :{message}\r\n");
@@ -195,7 +208,8 @@ namespace HappyIRCClientLibrary
         {
             Server = server;
             User = user;
-            tcpListener = new ListenThread(this, config);
+            tcpConnection = new TcpConnection(this, config);
+            Initialized = true;
         }
     }
 }
