@@ -66,7 +66,7 @@ namespace HappyIRCClientLibrary
         /// <summary>
         /// Connect to the IRC Server
         /// </summary>
-        public void Connect()
+        public void Connect() // TODO Make this async so it can be awaited
         {
             // TODO We should fire an event on connect
 
