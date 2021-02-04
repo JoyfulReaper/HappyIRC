@@ -69,7 +69,7 @@ namespace HappyIRCClientLibrary
         {
             // TODO We should fire an event on connect
 
-            log.Debug($"Connecting to: {Server.ServerAddress}:{Server.Port}");
+            log.Info($"Connecting to: {Server.ServerAddress}:{Server.Port}");
 
             tcpConnectionThread = new Thread(new ParameterizedThreadStart(tcpConnection.ServerListener));
             tcpConnectionThread.Start(Server);
@@ -93,11 +93,13 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public void Disconnect()
         {
+            log.Info($"Disconnecting from: {Server.ServerAddress}:{Server.Port}");
+
             ThrowIfNotConnectedOrInitialized();
 
             SendMessageToServer("QUIT\r\n");
             tcpConnection.Close();
-            tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
+             tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
             Connected = false;
         }
 
