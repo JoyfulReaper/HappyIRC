@@ -44,9 +44,9 @@ namespace HappyIRCConsoleClient
             IrcClient client = iclient as IrcClient;
 
             client.Initialize(server, user);
-            client.Connect();
+            await client.Connect();
 
-            Thread.Sleep(15000); // wait for it to connect... we should use an event later
+            //Thread.Sleep(15000); // wait for it to connect... we should use an event later
             client.Join("#windows95");
 
             Thread.Sleep(1000);
