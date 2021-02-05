@@ -30,6 +30,7 @@ using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary
 {
@@ -65,7 +66,7 @@ namespace HappyIRCClientLibrary
         /// <summary>
         /// Connect to the IRC Server
         /// </summary>
-        public void Connect() // TODO Make this async so it can be awaited
+        public async Task Connect() // TODO Make this async so it can be awaited
         {
             // TODO We should fire an event on connect
 
@@ -86,6 +87,7 @@ namespace HappyIRCClientLibrary
             }
 
             Connected = true;
+            return;
         }
 
         /// <summary>

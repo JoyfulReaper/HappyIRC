@@ -25,6 +25,7 @@ SOFTWARE.
 
 using HappyIRCClientLibrary.Models;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary
 {
@@ -36,7 +37,7 @@ namespace HappyIRCClientLibrary
         User User { get; }
 
         void Initialize(Server server, User user);
-        void Connect();
+        Task Connect();
         void Disconnect();
         void SendMessageToServer(string message);
     }
