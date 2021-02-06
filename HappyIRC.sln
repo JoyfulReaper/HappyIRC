@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyIRCClientLibrary", "HappyIRCClientLibrary\HappyIRCClientLibrary.csproj", "{A539B439-9C06-43F1-9942-AA4AEF36BC4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCClientLibrary", "HappyIRCClientLibrary\HappyIRCClientLibrary.csproj", "{A539B439-9C06-43F1-9942-AA4AEF36BC4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyIRCServerLibrary", "HappyIRCServerLibrary\HappyIRCServerLibrary.csproj", "{AFDA35C7-C8D1-4345-B3D3-5D526BD35306}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCServerLibrary", "HappyIRCServerLibrary\HappyIRCServerLibrary.csproj", "{AFDA35C7-C8D1-4345-B3D3-5D526BD35306}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyIRCConsoleClient", "HappyIRCConsoleClient\HappyIRCConsoleClient.csproj", "{D846C28A-69F9-4782-AFAA-873FC651EBA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCConsoleClient", "HappyIRCConsoleClient\HappyIRCConsoleClient.csproj", "{D846C28A-69F9-4782-AFAA-873FC651EBA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyIRCd", "HappyIRCd\HappyIRCd.csproj", "{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCd", "HappyIRCd\HappyIRCd.csproj", "{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRCServerTestClient", "IRCServerTestClient\IRCServerTestClient.csproj", "{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

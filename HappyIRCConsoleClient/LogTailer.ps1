@@ -1,0 +1,1 @@
+Get-Content .\bin\Debug\net5.0\Logs\IRCClientLibrary.log -Wait

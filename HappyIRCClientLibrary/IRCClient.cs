@@ -49,6 +49,7 @@ namespace HappyIRCClientLibrary
         private readonly IConfig config;
         private TcpConnection tcpConnection;
         private Thread tcpConnectionThread;
+        private readonly Queue<ServerMessage> messageQueue = new Queue<ServerMessage>();
 
 
         /// <summary>
@@ -101,16 +102,42 @@ namespace HappyIRCClientLibrary
 
             SendMessageToServer("QUIT\r\n");
             tcpConnection.Close();
-             tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
+            tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
             Connected = false;
         }
 
-        private void HandleServerResponse(string message)
+        internal void ReceiveMessageFromServer(ServerMessage message)
         {
-
+            if(message != null)
+            {
+                messageQueue.Enqueue(message);
+            }
         }
 
+        /// <summary>
+        /// DeQueue message from server - FOR TESTING
+        /// </summary>
+        /// <returns></returns>
+        public bool DeQueueMessage(out ServerMessage message)
+        {
+            if(messageQueue.Count == 0)
+            {
+                message = null;
+                return false;
+            }
 
+            message = messageQueue.Dequeue();
+            return true;
+        }
+
+        /// <summary>
+        /// Peek into the message Queue - FOR TESTING
+        /// </summary>
+        /// <returns></returns>
+        public ServerMessage PeekMessage()
+        {
+            return messageQueue.Peek();
+        }
 
         /// <summary>
         /// Send a message to the IRC server

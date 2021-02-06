@@ -35,27 +35,27 @@ namespace HappyIRCConsoleClient
     {
         static async Task Main(string[] args)
         {
-            var serviceProvider = ContainerBuilder.BuildContainer();
+            var serviceProvider = ContainerBuilder.BuildContainer(); // This caused the DI container to be built, it holds the services
 
-            Server server = new Server("irc.quakenet.org", 6667);
-            User user = new User("HappyIRC", "Happy IRC!");
+            Server server = new Server("irc.quakenet.org", 6667); // The server object is used to set what server to connect to
+            User user = new User("HappyIRC", "Happy IRC!");        // The user object holds our Nick and Real name
 
-            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();
-            IrcClient client = iclient as IrcClient;
+            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();  // This gets an IRCClient object from the DI
+            IrcClient client = iclient as IrcClient; // This is for testing, but exposes parts of the client that are not defined in the IIrcClient interface (For testing)
 
-            client.Initialize(server, user);
-            await client.Connect();
+            client.Initialize(server, user); // This is how you tell the server where to connect and as who using the objects created above
+            await client.Connect(); // Connect
 
             //Thread.Sleep(15000); // wait for it to connect... we should use an event later
-            client.Join("#windows95");
+            client.Join("#windows95");  // Join a channel
 
             Thread.Sleep(1000);
-            client.SendMessage("#windows95", "I swear I'm not a bot!");
+            client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
 
             Thread.Sleep(40000);
-            client.Part("#windows95");
+            client.Part("#windows95"); // Leave the channel
             Thread.Sleep(1000);
-            client.Disconnect();
+            client.Disconnect(); // Dissconnect
         }
     }
 }
