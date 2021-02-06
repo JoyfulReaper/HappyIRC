@@ -102,7 +102,7 @@ namespace HappyIRCClientLibrary
 
             SendMessageToServer("QUIT\r\n");
             tcpConnection.Close();
-             tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
+            tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
             Connected = false;
         }
 
