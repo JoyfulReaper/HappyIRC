@@ -49,6 +49,7 @@ namespace IRCServerTestClient
             this.btnSend.TabIndex = 1;
             this.btnSend.Text = "SEND!!!!";
             this.btnSend.UseVisualStyleBackColor = true;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // txtServerMessages
             // 
@@ -62,6 +63,7 @@ namespace IRCServerTestClient
             // 
             // frmMain
             // 
+            this.AcceptButton = this.btnSend;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1408, 788);
@@ -69,7 +71,8 @@ namespace IRCServerTestClient
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.txtSendToServer);
             this.Name = "frmMain";
-            this.Text = "TEST ALL THE THINGS!";
+            this.Text = "Testing IRC Client";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
