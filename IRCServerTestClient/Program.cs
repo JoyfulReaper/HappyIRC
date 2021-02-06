@@ -1,3 +1,5 @@
+using HappyIRCClientLibrary;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +16,15 @@ namespace IRCServerTestClient
         [STAThread]
         static void Main()
         {
+            var serviceProvider = ContainerBuilder.BuildContainer();
+
+            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();
+            IrcClient client = iclient as IrcClient;
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain());
+            Application.Run(new frmMain(client));
         }
     }
 }
