@@ -68,14 +68,14 @@ namespace HappyIRCClientLibrary
                     }
                     else
                     {
-                        var response = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
+                        var parsedMessage = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
                         if (!Connected)
                         {
-                            ConnectionHelper(response); // We aren't connected yet, boo!
+                            ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
                         }
                         else
                         {
-                            //HandleServerResponse(currentMessage); // We are connected, hand the parsed message to the IRC client
+                            ircClient.ReceiveMessageFromServer(parsedMessage);
                         }
                     }
                 }
@@ -104,7 +104,7 @@ namespace HappyIRCClientLibrary
             else if (message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
-                log.Info("!!!!!!!!!I THINK WE ARE CONNECTED NOW!!!!!!!!");
+                log.Info("IRC Server acknowledges we are connected");
             }
         }
 
