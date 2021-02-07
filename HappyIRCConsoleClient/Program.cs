@@ -52,7 +52,7 @@ namespace HappyIRCConsoleClient
             Thread.Sleep(1000);
             client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
 
-            Thread.Sleep(40000);
+            Thread.Sleep(4000);
             client.Part("#windows95"); // Leave the channel
             Thread.Sleep(1000);
             client.Disconnect(); // Dissconnect
