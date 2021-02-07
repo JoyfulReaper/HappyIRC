@@ -23,14 +23,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using HappyIRCClientLibrary.Models;
 
-namespace HappyIRCClientLibrary.Enums
+namespace HappyIRCClientLibrary.Events
 {
-    /// <summary>
-    /// The type of the server message
-    /// </summary>
-    public enum CommandType
+    public class ServerMessageReceivedEventArgs : System.EventArgs
     {
-        Unknown, ChannelMessage, PrivateMessage, NumericReply,
+        private readonly ServerMessage ServerMessage;
+
+        public ServerMessageReceivedEventArgs(ServerMessage serverMessage)
+        {
+            ServerMessage = serverMessage;
+        }
     }
 }

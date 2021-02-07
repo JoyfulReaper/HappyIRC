@@ -1,4 +1,29 @@
-﻿using HappyIRCClientLibrary.Config;
+﻿/*
+MIT License
+
+Copyright(c) 2021 Kyle Givler
+https://github.com/JoyfulReaper
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using HappyIRCClientLibrary.Config;
 using HappyIRCClientLibrary.Enums;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Parsers;
@@ -18,40 +43,39 @@ namespace HappyIRCClientLibrary
         private readonly IrcClient ircClient;
         private TcpClient client; // TcpClient connection to the server
         private readonly ILog log;
+        private readonly Server server;
 
         private NetworkStream networkStream;
 
         public TcpConnection( 
             IrcClient ircClient,
-            IConfig config)
+            IConfig config,
+            Server server)
         {
             this.messageParser = new MessageParser(ircClient.User.NickName, config);
             this.ircClient = ircClient;
-            this.log = config.GetLogger("ListenThread");
+            this.log = config.GetLogger("TcpConnection");
+            this.server = server;
         }
 
         /// <summary>
-        /// Listen for messages from the IRC sercer
+        /// Listen for messages from the server
         /// </summary>
-        /// <param name="networkSteam">The network stream to listen on</param>
-        public void ServerListener(Object serverObj)
+        /// <param name="serverObj">The server to listen to</param>
+        public void ServerListener()
         {
-            Server server = serverObj as Server;
-            if(server == null)
-            {
-                throw new ArgumentException("serverObj must be a valid Server object!", nameof(serverObj));
-            }
-
             client = new TcpClient(server.ServerAddress, server.Port);
             networkStream = client.GetStream();
             Queue<string> messageQueue = new Queue<string>();
+            byte[] bytes = new byte[1024]; // Read buffer
+            string message = string.Empty;
 
             while (true)
             {
-                byte[] bytes = new byte[1024]; // Read buffer
+                // TODO Find a way to see if we are connected before reading (What I was trying wasn't working..)
                 int bytesRead = networkStream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
+                message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
 
-                var message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
                 var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
 
                 Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
@@ -60,7 +84,7 @@ namespace HappyIRCClientLibrary
                 {
                     var currentMessage = messageQueue.Dequeue();
 
-                    log.Debug($"ListenThread: {currentMessage}");
+                    log.Debug($"ServerListener(): {currentMessage.Replace("\r", "").Replace("\n", "")}");
 
                     if (currentMessage.ToUpperInvariant().StartsWith("PING"))
                     {
@@ -95,8 +119,8 @@ namespace HappyIRCClientLibrary
         {
             if (message.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
             {
-                log.Fatal("Server reports Nick is in use, unable to connect.");
-                log.Fatal("Quitting");
+                log.Fatal("ConnectionHelper(): Server reports Nick is in use, unable to connect.");
+                log.Fatal("ConnectionHelper(): Quitting");
 
                 ircClient.Disconnect();
                 Environment.Exit(0);
@@ -104,7 +128,7 @@ namespace HappyIRCClientLibrary
             else if (message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
-                log.Info("IRC Server acknowledges we are connected");
+                log.Info("IRC Server acknowledges we are connected.");
             }
         }
 
@@ -127,8 +151,8 @@ namespace HappyIRCClientLibrary
             //TODO Error checking
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
 
-            log.Debug($"Sending: {message}".Replace("\r'", "").Replace("\n", ""));
             networkStream.Write(writeBuffer, 0, writeBuffer.Length);
+            log.Debug($"Sending: {message}".Replace("\r", "").Replace("\n", ""));
         }
 
         public void Close()

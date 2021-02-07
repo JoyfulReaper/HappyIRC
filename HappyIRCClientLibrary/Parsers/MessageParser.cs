@@ -40,6 +40,8 @@ namespace HappyIRCClientLibrary.Parsers
     /// </summary>
     public class MessageParser : IMessageParser
     {
+        // TODO clean up/re-write/improve this class
+
         private readonly string clientNick; // User's nickname
         private readonly IConfig config;
 
@@ -127,7 +129,8 @@ namespace HappyIRCClientLibrary.Parsers
                 sb.Append($" Parameter: {p} ");
             }
             sb.Append($" trailing: {trailing}");
-            log.Debug(sb.ToString());
+            var debugMessage = sb.ToString().Replace("\r", "").Replace("\n", "");
+            log.Debug(debugMessage);
 
             return serverMessage;
         }
@@ -140,7 +143,7 @@ namespace HappyIRCClientLibrary.Parsers
 
             if (command == "PRIVMSG")
             {
-                if (parameters[0] == clientNick) // I think this should be one...
+                if (parameters[0] == clientNick)
                 {
                     type = CommandType.PrivateMessage;
                 }
