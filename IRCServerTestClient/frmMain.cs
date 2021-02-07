@@ -38,7 +38,7 @@ namespace IRCServerTestClient
             Server server = new Server("irc.quakenet.org", 6667);
 
             client.Initialize(server, user);
-            await client.Connect();
+            await client.Connect(); //TODO Show something when waiting to connect...
 
             client.ServerMessageReceived += MessageReceived;
         }
@@ -67,6 +67,35 @@ namespace IRCServerTestClient
             if (txtServerMessages.InvokeRequired)
             {
                 txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
+            }
+            else
+            {
+                txtServerMessages.AppendText(message + '\n');
+            }
+
+            StringBuilder sbParsed = new StringBuilder();
+            sbParsed.Append($"Type: {e.ServerMessage.Type} ");
+            sbParsed.Append($"Prefix: {e.ServerMessage.Prefix} ");
+            sbParsed.Append($"Channel: {e.ServerMessage.Channel} ");
+            sbParsed.Append($"Nick: {e.ServerMessage.Nick} ");
+            sbParsed.Append($"Response Code {e.ServerMessage.ResponseCode} ");
+            sbParsed.Append($"Command: {e.ServerMessage.Command} ");
+            foreach (var p in e.ServerMessage.Parameters)
+            {
+                sbParsed.Append($" Parameter: {p} ");
+            }
+            sbParsed.Append($"Trailing: {e.ServerMessage.Trailing} ");
+            sbParsed.AppendLine();
+
+            var parsed = sbParsed.ToString();
+
+            if (txtParsedMessages.InvokeRequired)
+            {
+                txtParsedMessages.Invoke(new MethodInvoker(delegate { txtParsedMessages.AppendText(parsed); }));
+            }
+            else
+            {
+                txtParsedMessages.AppendText(parsed);
             }
         }
     }

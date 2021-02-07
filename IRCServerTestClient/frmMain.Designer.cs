@@ -32,18 +32,19 @@ namespace IRCServerTestClient
             this.txtSendToServer = new System.Windows.Forms.TextBox();
             this.btnSend = new System.Windows.Forms.Button();
             this.txtServerMessages = new System.Windows.Forms.TextBox();
+            this.txtParsedMessages = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // txtSendToServer
             // 
-            this.txtSendToServer.Location = new System.Drawing.Point(2, 751);
+            this.txtSendToServer.Location = new System.Drawing.Point(12, 865);
             this.txtSendToServer.Name = "txtSendToServer";
             this.txtSendToServer.Size = new System.Drawing.Size(1267, 25);
             this.txtSendToServer.TabIndex = 0;
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(1275, 751);
+            this.btnSend.Location = new System.Drawing.Point(1285, 865);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(121, 25);
             this.btnSend.TabIndex = 1;
@@ -57,16 +58,27 @@ namespace IRCServerTestClient
             this.txtServerMessages.Multiline = true;
             this.txtServerMessages.Name = "txtServerMessages";
             this.txtServerMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtServerMessages.Size = new System.Drawing.Size(1384, 733);
+            this.txtServerMessages.Size = new System.Drawing.Size(1384, 510);
             this.txtServerMessages.TabIndex = 2;
             this.txtServerMessages.WordWrap = false;
+            // 
+            // txtParsedMessages
+            // 
+            this.txtParsedMessages.Location = new System.Drawing.Point(17, 528);
+            this.txtParsedMessages.Multiline = true;
+            this.txtParsedMessages.Name = "txtParsedMessages";
+            this.txtParsedMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtParsedMessages.Size = new System.Drawing.Size(1384, 331);
+            this.txtParsedMessages.TabIndex = 3;
+            this.txtParsedMessages.WordWrap = false;
             // 
             // frmMain
             // 
             this.AcceptButton = this.btnSend;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1408, 788);
+            this.ClientSize = new System.Drawing.Size(1416, 898);
+            this.Controls.Add(this.txtParsedMessages);
             this.Controls.Add(this.txtServerMessages);
             this.Controls.Add(this.btnSend);
             this.Controls.Add(this.txtSendToServer);
@@ -84,6 +96,7 @@ namespace IRCServerTestClient
         private System.Windows.Forms.TextBox txtSendToServer;
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.TextBox txtServerMessages;
+        private System.Windows.Forms.TextBox txtParsedMessages;
     }
 }
 
