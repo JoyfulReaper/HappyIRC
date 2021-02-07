@@ -27,7 +27,7 @@ SOFTWARE.
 namespace HappyIRCClientLibrary.Enums
 {
     /// <summary>
-    /// Represents the type of a 
+    /// The type of the server message
     /// </summary>
     public enum CommandType
     {
