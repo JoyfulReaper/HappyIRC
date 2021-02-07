@@ -29,7 +29,7 @@ namespace HappyIRCClientLibrary.Events
 {
     public class ServerMessageReceivedEventArgs : System.EventArgs
     {
-        private readonly ServerMessage ServerMessage;
+        public readonly ServerMessage ServerMessage;
 
         public ServerMessageReceivedEventArgs(ServerMessage serverMessage)
         {

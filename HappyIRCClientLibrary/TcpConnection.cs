@@ -96,6 +96,7 @@ namespace HappyIRCClientLibrary
                         if (!Connected)
                         {
                             ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
+                            ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
                         }
                         else
                         {
@@ -105,11 +106,6 @@ namespace HappyIRCClientLibrary
                 }
             }
         }
-
-        //public NetworkStream GetNetworkStream()
-        //{
-        //    return networkStream;
-        //}
 
         /// <summary>
         /// Check to see if we are conneceted. We send the messages here until we are connected.

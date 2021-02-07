@@ -36,6 +36,38 @@ namespace HappyIRCClientLibrary.Enums
         RPL_MYINFO = 4, // "<servername> <version> <available user modes> < available channel modes>"
         RPL_BOUNCE = 5, // "Try server <server name>, port <port number>"
 
+        RPL_TRACELINK = 200,
+        RPL_TRACECONNECTION = 201,
+        RPL_TRACEHANDSHAKE = 202,
+        RPL_TRACEUNKNOWN = 203,
+        RPL_TRACEOPERATOR = 204,
+        RPL_TRACEUSER = 205,
+        RPL_TRACESERVER = 206,
+        RPL_TRACESERVICE = 207,
+        RPL_TRACENEWTYPE = 208,
+        RPL_TRACECLASS = 209,
+        RPL_TRACECONNECT = 210,
+        RPL_STATSLINKINFO = 211,
+        RPL_STATSCOMMANDS = 212,
+        RPL_ENDOFSTATS = 219,
+        RPL_UMODEIS = 221,
+        RPL_SERVLIST = 234,
+        RPL_SERVLISTEND = 235,
+        RPL_STATSUPTIME = 242,
+        RPL_STATUSOLINE = 243,
+        RPL_LUSERCLIENT = 251,
+        RPL_LUSEROP = 252,
+        RPL_LUSERUNKNOWN = 253,
+        RPL_LUSERCHANNELS = 254,
+        RPL_LUSERME = 255,
+        RPL_ADMINME = 256,
+        RPL_ADMINLOC1 = 257,
+        RPL_ADMINLOC2 = 258,
+        RPL_ADMINEMAIL = 259,
+        RPL_TRACELOG = 261,
+        RPL_TRACEEND = 262,
+        RPL_TRYAGAIN = 263,
+
         RPL_AWAY = 301,
         RPL_USERHOST = 302, // ":*1<reply> *( " " <reply> )"
         RPL_ISON = 303, // ":*1<nick> *( " " <nick> )"
@@ -76,6 +108,14 @@ namespace HappyIRCClientLibrary.Enums
         RPL_ENDOFINFO = 374, // ":End of INFO list"
         RPL_MOTDSTART = 375, // ":- <server> Message of the day - "
         RPL_ENDOFMOTD = 376, // ":End of MOTD command"
+        RPL_YOUREOPER = 381, // ":You are now an IRC operator"
+        RPL_REHASHING = 382, // "<config file> :Rehashing"
+        RPL_YOURESERVICE = 383, // "You are service <servicename>"
+        RPL_TIME = 391, // "<server> :<string showing server's local time>"
+        RPL_USERSTART = 392, // :UserID   Terminal  Host"
+        RPL_USERS = 393, // ":<username> <ttyline> <hostname>"
+        RPL_ENDOFUSERS = 394, // ":End of users"
+        RPL_NOUSERS = 395, // ":Nobody logged in"
 
         ERR_NOSUCHNICK = 401, // "<nickname> :No such nick/channel"
         ERR_NOSUCHCHANNEL = 403, // "<channel name> :No such channel"

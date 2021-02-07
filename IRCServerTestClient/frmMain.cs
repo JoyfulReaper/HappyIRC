@@ -1,4 +1,5 @@
 ﻿using HappyIRCClientLibrary;
+using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using System;
 using System.Collections.Generic;
@@ -21,8 +22,6 @@ namespace IRCServerTestClient
         public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
 
         private IrcClient client;
-        private Thread messageReceiverThread; // Just using an event would be better, too lazy to relearn now...
-        private MessageReceiver messageReceiver;
 
         public frmMain(IrcClient client)
         {
@@ -39,14 +38,9 @@ namespace IRCServerTestClient
             Server server = new Server("irc.quakenet.org", 6667);
 
             client.Initialize(server, user);
-            await client.Connect();
+            await client.Connect(); //TODO Show something when waiting to connect...
 
-            messageReceiver = new MessageReceiver(client);
-
-            messageReceiver.messageReceived += message_Received;
-
-            messageReceiverThread = new Thread(new ThreadStart(messageReceiver.MessageListener));
-            messageReceiverThread.Start();
+            client.ServerMessageReceived += MessageReceived;
         }
 
         private async void frmMain_Load(object sender, EventArgs e)
@@ -54,15 +48,6 @@ namespace IRCServerTestClient
             await Setup();
         }
 
-        private void message_Received(Object sender, MessageReceivedEventArgs e)
-        {
-            var message = e.ServerMessage.Message;
-          
-            if(txtServerMessages.InvokeRequired)
-            {
-                txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); } ));
-            }
-        }
 
         private void btnSend_Click(object sender, EventArgs e)
         {
@@ -72,9 +57,46 @@ namespace IRCServerTestClient
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            messageReceiver.Close();
             client.Disconnect();
-            messageReceiverThread.Join();
+        }
+
+        private void MessageReceived(object sender, ServerMessageReceivedEventArgs e)
+        {
+            var message = e.ServerMessage.Message;
+
+            if (txtServerMessages.InvokeRequired)
+            {
+                txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
+            }
+            else
+            {
+                txtServerMessages.AppendText(message + '\n');
+            }
+
+            StringBuilder sbParsed = new StringBuilder();
+            sbParsed.Append($"Type: {e.ServerMessage.Type} ");
+            sbParsed.Append($"Prefix: {e.ServerMessage.Prefix} ");
+            sbParsed.Append($"Channel: {e.ServerMessage.Channel} ");
+            sbParsed.Append($"Nick: {e.ServerMessage.Nick} ");
+            sbParsed.Append($"Response Code {e.ServerMessage.ResponseCode} ");
+            sbParsed.Append($"Command: {e.ServerMessage.Command} ");
+            foreach (var p in e.ServerMessage.Parameters)
+            {
+                sbParsed.Append($" Parameter: {p} ");
+            }
+            sbParsed.Append($"Trailing: {e.ServerMessage.Trailing} ");
+            sbParsed.AppendLine();
+
+            var parsed = sbParsed.ToString();
+
+            if (txtParsedMessages.InvokeRequired)
+            {
+                txtParsedMessages.Invoke(new MethodInvoker(delegate { txtParsedMessages.AppendText(parsed); }));
+            }
+            else
+            {
+                txtParsedMessages.AppendText(parsed);
+            }
         }
     }
 }

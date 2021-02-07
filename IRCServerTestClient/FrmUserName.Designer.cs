@@ -91,7 +91,7 @@ namespace IRCServerTestClient
             this.Controls.Add(this.txtNick);
             this.Controls.Add(this.btnSetNick);
             this.Name = "FrmUserName";
-            this.Text = "Setup your crap!";
+            this.Text = "Set Nick";
             this.ResumeLayout(false);
             this.PerformLayout();
 

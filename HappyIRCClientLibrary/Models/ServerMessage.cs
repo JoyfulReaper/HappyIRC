@@ -38,7 +38,18 @@ namespace HappyIRCClientLibrary.Models
         public string Message { get; private set; }
         public string Nick { get; private set; }
         public string Command { get; private set; }
-        public string Channel => Parameters[1];
+        public string Channel
+        {
+            get
+            {
+                if (Parameters.Count < 1)
+                {
+                    return string.Empty;
+                }
+
+                return Parameters[0];
+            }
+        }
         public string Trailing { get; private set; }
         public string Prefix { get; private set; }
         public NumericResponse ResponseCode { get; private set; }
