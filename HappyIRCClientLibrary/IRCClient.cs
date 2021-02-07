@@ -31,6 +31,7 @@ using System;
 using HappyIRCClientLibrary.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using HappyIRCClientLibrary.Events;
 
 namespace HappyIRCClientLibrary
 {
@@ -45,38 +46,57 @@ namespace HappyIRCClientLibrary
         public bool Initialized { get; private set; } = false; // True if Initialized()
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
 
+        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
+
         private readonly ILog log;
         private readonly IConfig config;
+
         private TcpConnection tcpConnection;
-        private Thread tcpConnectionThread;
+        //private Thread tcpConnectionThread;
+        private Task tcpConnectionTask;
+
         private readonly Queue<ServerMessage> messageQueue = new Queue<ServerMessage>();
 
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
-        /// <param name="server">The IRC server to connect to</param>
-        /// <param name="config">An instance of the Config class</param>
         public IrcClient(
             IConfig config)
         {
             this.config = config;
-            log = config.GetLogger("IRCClientLib");
+            log = config.GetLogger("IrcClient");
+
+            TaskScheduler.UnobservedTaskException += ReceviedUnobservedException;
+        }
+
+        /// <summary>
+        /// Initialize the client before connecting
+        /// </summary>
+        /// <param name="server">The server to connect to</param>
+        /// <param name="user">The user to connect as</param>
+        public void Initialize(Server server, User user)
+        {
+            Server = server;
+            User = user;
+            tcpConnection = new TcpConnection(this, config, server);
+            Initialized = true;
         }
 
         /// <summary>
         /// Connect to the IRC Server
         /// </summary>
-        public async Task Connect() // TODO Make this async so it can be awaited
+        public async Task Connect()
         {
-            // TODO We should fire an event on connect
-
             log.Info($"Connecting to: {Server.ServerAddress}:{Server.Port}");
 
-            tcpConnectionThread = new Thread(new ParameterizedThreadStart(tcpConnection.ServerListener));
-            tcpConnectionThread.Start(Server);
+            //tcpConnectionThread = new Thread(new ParameterizedThreadStart(tcpConnection.ServerListener));
+            //tcpConnectionThread.Start(Server);
+
+            tcpConnectionTask = Task.Factory.StartNew(tcpConnection.ServerListener, TaskCreationOptions.LongRunning);
 
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
+            // TODO look into this more
             Thread.Sleep(4000); 
 
             tcpConnection.SendMessageToServer($"NICK {User.NickName}\r\n");
@@ -102,42 +122,60 @@ namespace HappyIRCClientLibrary
 
             SendMessageToServer("QUIT\r\n");
             tcpConnection.Close();
-            tcpConnectionThread.Abort(); // TODO: Look into why this throws an exception 
+            // Stop the task here
             Connected = false;
         }
 
+        /// <summary>
+        /// When the TcpListen thread recevices a message it is sent here.
+        /// </summary>
+        /// <param name="message">The message that was received from the server</param>
         internal void ReceiveMessageFromServer(ServerMessage message)
         {
             if(message != null)
             {
-                messageQueue.Enqueue(message);
+                OnServerMessageReceived(new ServerMessageReceivedEventArgs(message));
             }
-        }
-
-        /// <summary>
-        /// DeQueue message from server - FOR TESTING
-        /// </summary>
-        /// <returns></returns>
-        public bool DeQueueMessage(out ServerMessage message)
-        {
-            if(messageQueue.Count == 0)
+            else
             {
-                message = null;
-                return false;
+                log.Warn("ReceiveMessageFromServer(): Recevied null message");
             }
-
-            message = messageQueue.Dequeue();
-            return true;
         }
 
         /// <summary>
-        /// Peek into the message Queue - FOR TESTING
+        /// A message has been received by the server,
+        /// fire an event to let the subscribers know.
         /// </summary>
-        /// <returns></returns>
-        public ServerMessage PeekMessage()
+        /// <param name="e">The event args</param>
+        protected virtual void OnServerMessageReceived(ServerMessageReceivedEventArgs e)
         {
-            return messageQueue.Peek();
+            ServerMessageReceived?.Invoke(this, e);
         }
+
+        ///// <summary>
+        ///// DeQueue message from server - FOR TESTING
+        ///// </summary>
+        ///// <returns></returns>
+        //public bool DeQueueMessage(out ServerMessage message)
+        //{
+        //    if (messageQueue.Count == 0)
+        //    {
+        //        message = null;
+        //        return false;
+        //    }
+
+        //    message = messageQueue.Dequeue();
+        //    return true;
+        //}
+
+        ///// <summary>
+        ///// Peek into the message Queue - FOR TESTING
+        ///// </summary>
+        ///// <returns></returns>
+        //public ServerMessage PeekMessage()
+        //{
+        //    return messageQueue.Peek();
+        //}
 
         /// <summary>
         /// Send a message to the IRC server
@@ -162,6 +200,16 @@ namespace HappyIRCClientLibrary
                 log.Error("Client is not initialized");
                 throw new InvalidOperationException("The Client is not initialized.");
             }
+        }
+
+        /// <summary>
+        /// Log any unobserved exceptions
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReceviedUnobservedException (object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            log.Error("Received Unobserved Exception", e.Exception);
         }
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
@@ -232,14 +280,6 @@ namespace HappyIRCClientLibrary
            ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
            ERR_NOSUCHNICK
            RPL_AWAY */
-        }
-
-        public void Initialize(Server server, User user)
-        {
-            Server = server;
-            User = user;
-            tcpConnection = new TcpConnection(this, config);
-            Initialized = true;
         }
     }
 }
