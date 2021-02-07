@@ -152,31 +152,6 @@ namespace HappyIRCClientLibrary
             ServerMessageReceived?.Invoke(this, e);
         }
 
-        ///// <summary>
-        ///// DeQueue message from server - FOR TESTING
-        ///// </summary>
-        ///// <returns></returns>
-        //public bool DeQueueMessage(out ServerMessage message)
-        //{
-        //    if (messageQueue.Count == 0)
-        //    {
-        //        message = null;
-        //        return false;
-        //    }
-
-        //    message = messageQueue.Dequeue();
-        //    return true;
-        //}
-
-        ///// <summary>
-        ///// Peek into the message Queue - FOR TESTING
-        ///// </summary>
-        ///// <returns></returns>
-        //public ServerMessage PeekMessage()
-        //{
-        //    return messageQueue.Peek();
-        //}
-
         /// <summary>
         /// Send a message to the IRC server
         /// </summary>
