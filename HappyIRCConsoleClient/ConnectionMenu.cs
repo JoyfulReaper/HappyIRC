@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using ConsoleImplementation.Models;
-using ConsoleImplementation.Helpers;
-using ConsoleImplementation.Enums;
+using HappyIRCConsoleClient.YoriMirusLib.Models;
+using HappyIRCConsoleClient.YoriMirusLib.Helpers;
+using HappyIRCConsoleClient.YoriMirusLib.Enums;
 
 namespace HappyIRCConsoleClient
 {
@@ -41,6 +41,12 @@ namespace HappyIRCConsoleClient
             userName = "";
 
             MenuCursor = new ConsoleCursor(0, 2);
+            MenuOptions = new List<MenuOption>()
+            {
+                new MenuOption("", 0), //Server name selection
+                new MenuOption("", 1), //User name selection
+                new MenuOption("Connect to server", 2)
+            };
 
             Start();
         }
@@ -151,46 +157,17 @@ namespace HappyIRCConsoleClient
         }
         protected override void DisplaySelection()
         {
-            Console.ForegroundColor = ConsoleColor.Black;
-            //TODO: Make MenuSelection.Text changeable, so that this code can be reduced to 6 lines.
             //CursorLeft is 16 because there is the text "Server name: " before it, which also starts on the CursorLeft position 2.
             Console.SetCursorPosition(16, 8);
-            if(MenuCursor.TopIndex == 0)
-            {
-                Console.BackgroundColor = ConsoleColor.Blue;
-                Console.WriteLine(serverName.PadRight(Console.WindowWidth - 20));
-            }
-            else
-            {
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.WriteLine(serverName.PadRight(Console.WindowWidth - 20));
-            }
+            MenuOptions[0].SetText(serverName.PadRight(Console.WindowWidth - 19));
+            MenuOptions[0].Display(MenuCursor.LeftIndex, MenuCursor.TopIndex);
 
-            Console.SetCursorPosition(14, 10);
-            if(MenuCursor.TopIndex == 1)
-            {
-                Console.BackgroundColor = ConsoleColor.Blue;
-                Console.WriteLine(userName.PadRight(Console.WindowWidth - 18));
-            }
-            else
-            {
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.WriteLine(userName.PadRight(Console.WindowWidth - 18));
-            }
+            Console.SetCursorPosition(16, 10);
+            MenuOptions[1].SetText(userName.PadRight(Console.WindowWidth - 19));
+            MenuOptions[1].Display(MenuCursor.LeftIndex, MenuCursor.TopIndex);
 
             Console.SetCursorPosition(0, 14);
-            if(MenuCursor.TopIndex == 2)
-            {
-                Console.BackgroundColor = ConsoleColor.Blue;
-                Console.ForegroundColor = ConsoleColor.Black;
-                ConsoleHelper.WriteInCenter("Connect to server");
-            }
-            else
-            {
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.Gray;
-                ConsoleHelper.WriteInCenter("Connect to server");
-            }
+            MenuOptions[2].WriteInCenter(MenuCursor.LeftIndex, MenuCursor.TopIndex);
 
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;

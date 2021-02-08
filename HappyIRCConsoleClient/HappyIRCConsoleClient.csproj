@@ -13,10 +13,4 @@
     <ProjectReference Include="..\HappyIRCClientLibrary\HappyIRCClientLibrary.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="ConsoleImplementation">
-      <HintPath>ConsoleImplementation.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
