@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary;
@@ -35,6 +36,13 @@ namespace HappyIRCConsoleClient
     {
         static async Task Main(string[] args)
         {
+            Console.InputEncoding = System.Text.Encoding.Unicode;
+            Console.OutputEncoding = System.Text.Encoding.Unicode;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
+
+            new ConnectionMenu();
+
             var serviceProvider = ContainerBuilder.BuildContainer(); // This caused the DI container to be built, it holds the services
 
             Server server = new Server("irc.quakenet.org", 6667); // The server object is used to set what server to connect to
