@@ -45,16 +45,14 @@ namespace HappyIRCClientLibrary
         public bool Connected { get; private set; } = false;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
         public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the cleint is in
-
         public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
 
         private readonly ILog log;
         private readonly IConfig config;
 
         private TcpConnection tcpConnection;
-        //private Thread tcpConnectionThread;
         private Task tcpConnectionTask;
-
+        private CancellationTokenSource cts = new CancellationTokenSource();
         private readonly Queue<ServerMessage> messageQueue = new Queue<ServerMessage>();
 
 
@@ -79,7 +77,7 @@ namespace HappyIRCClientLibrary
         {
             Server = server;
             User = user;
-            tcpConnection = new TcpConnection(this, config, server);
+            tcpConnection = new TcpConnection(this, config, server, cts.Token);
             Initialized = true;
         }
 
@@ -89,10 +87,6 @@ namespace HappyIRCClientLibrary
         public async Task Connect()
         {
             log.Info($"Connecting to: {Server.ServerAddress}:{Server.Port}");
-
-            //tcpConnectionThread = new Thread(new ParameterizedThreadStart(tcpConnection.ServerListener));
-            //tcpConnectionThread.Start(Server);
-
             tcpConnectionTask = Task.Factory.StartNew(tcpConnection.ServerListener, TaskCreationOptions.LongRunning);
 
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
@@ -121,8 +115,7 @@ namespace HappyIRCClientLibrary
             ThrowIfNotConnectedOrInitialized();
 
             SendMessageToServer("QUIT\r\n");
-            tcpConnection.Close();
-            // Stop the task here
+            cts.Cancel();
             Connected = false;
         }
 
