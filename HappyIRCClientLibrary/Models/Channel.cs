@@ -32,38 +32,47 @@ SOFTWARE.
  */
 
 using System;
+using System.Text;
 
 namespace HappyIRCClientLibrary.Models
 {
     /// <summary>
     /// Represents a Channel
-    /// See RFC 2812 1.3: https://tools.ietf.org/html/rfc2812#section-1.3
+    /// See RFC 2812 3.2
     /// </summary>
     public class Channel
     {
-        private readonly IIrcClient client;
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                if (NameIsValid(value))
+                {
+                    name = value;
+                }
+                else
+                {
+                    throw new ArgumentException("Channel name is not valid", nameof(value));
+                }
+            }
+        }
 
+        public string Key { get; set; }
+
+        private readonly IIrcClient client;
         private static readonly char[] validStartingChars = { '&', '#', '+', '!' };
+
+        /// <summary>
+        /// Name of the channel
+        /// </summary>
+        private string name;
+
 
         public Channel(IIrcClient client)
         {
             this.client = client;
         }
-
-        /// <summary>
-        /// Name of the channel
-        /// </summary>
-        private string Name;
-
-        public string MyProperty
-        {
-            get { return Name; }
-            set
-            {
-                
-            }
-        }
-
 
         /// <summary>
         /// Send a message to this channel
@@ -85,21 +94,41 @@ namespace HappyIRCClientLibrary.Models
         }
 
         /// <summary>
+        /// RFC 2812 3.2.1 Join message
+        /// http://www.geekshed.net/2012/03/using-channel-keys/ Channel Keys
+        /// </summary>
+        /// <returns></returns>
+        public bool Join()
+        {
+            /*
+           TODO: Error checking
+           Possible Numeric Replies:
+           ERR_NEEDMOREPARAMS ERR_BANNEDFROMCHAN
+           ERR_INVITEONLYCHAN ERR_BADCHANNELKEY
+           ERR_CHANNELISFULL ERR_BADCHANMASK
+           ERR_NOSUCHCHANNEL ERR_TOOMANYCHANNELS
+           ERR_TOOMANYTARGETS ERR_UNAVAILRESOURCE
+           RPL_TOPIC
+            */
+
+            StringBuilder joinBuilder = new StringBuilder($"JOIN {Name}");
+            if (!string.IsNullOrEmpty(Key))
+            {
+                joinBuilder.Append($" {Key}");
+            }
+
+            client.SendMessageToServer(joinBuilder.ToString());
+
+            return true;
+        }
+
+        /// <summary>
         /// Check to see if a channel name is valid per See RFC 2812 1.3
         /// </summary>
         /// <param name="name"></param>
         /// <returns>true if valid, false if not</returns>
         public static bool NameIsValid(string name)
         {
-            // Must start with a specific charcter
-            foreach(char c in validStartingChars)
-            {
-                if (name[0] == c)
-                {
-                    return true;
-                }
-            }
-
             //Must not be longer than 50 characters
             if (name.Length > 50)
             {
@@ -112,7 +141,16 @@ namespace HappyIRCClientLibrary.Models
                 return false;
             }
 
-            return true;
+            // Must start with a specific charcter
+            foreach (char c in validStartingChars)
+            {
+                if (name[0] == c)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
