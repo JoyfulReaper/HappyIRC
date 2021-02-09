@@ -23,19 +23,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+/* TODO Important notes:
+ * 
+ * Because of IRC's Scandinavian origin, the characters {}|^ are
+ * considered to be the lower case equivalents of the characters []\~,
+ * respectively. This is a critical issue when determining the
+ * equivalence of two nicknames or channel names. 
+ */
+
 using System;
 
 namespace HappyIRCClientLibrary.Models
 {
     /// <summary>
     /// Represents a Channel
+    /// See RFC 2812 1.3: https://tools.ietf.org/html/rfc2812#section-1.3
     /// </summary>
     public class Channel
     {
+        private readonly IIrcClient client;
+
+        private static readonly char[] validStartingChars = { '&', '#', '+', '!' };
+
+        public Channel(IIrcClient client)
+        {
+            this.client = client;
+        }
+
         /// <summary>
         /// Name of the channel
         /// </summary>
-        public string Name { get; set; }
+        private string Name;
+
+        public string MyProperty
+        {
+            get { return Name; }
+            set
+            {
+                
+            }
+        }
+
 
         /// <summary>
         /// Send a message to this channel
@@ -43,7 +71,7 @@ namespace HappyIRCClientLibrary.Models
         /// <param name="message">The message to send</param>
         public void SendMessage(string message)
         {
-            throw new NotImplementedException();
+            client.SendMessageToServer("\r\n");
         }
 
         /// <summary>
@@ -54,6 +82,37 @@ namespace HappyIRCClientLibrary.Models
         public void ReceiveMessage(object sender, EventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Check to see if a channel name is valid per See RFC 2812 1.3
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>true if valid, false if not</returns>
+        public static bool NameIsValid(string name)
+        {
+            // Must start with a specific charcter
+            foreach(char c in validStartingChars)
+            {
+                if (name[0] == c)
+                {
+                    return true;
+                }
+            }
+
+            //Must not be longer than 50 characters
+            if (name.Length > 50)
+            {
+                return false;
+            }
+
+            //Must not contain spaces, commas, or control G (ASCII 7)
+            if (name.Contains(' ') || name.Contains(',') || name.Contains('\a'))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
