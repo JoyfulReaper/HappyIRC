@@ -30,11 +30,13 @@ namespace HappyIRCClientLibrary.Models
     {
         public string ServerAddress { get; private set; }
         public int Port { get; private set; }
+        public string Password { get; set; }
 
-        public Server(string serverAddress, int port)
+        public Server(string serverAddress, int port, string password = "")
         {
             ServerAddress = serverAddress;
             Port = port;
+            Password = password; // RFC 2812 3.1.1 Password message
         }
     }
 }
