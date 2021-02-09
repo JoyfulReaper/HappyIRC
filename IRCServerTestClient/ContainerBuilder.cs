@@ -25,7 +25,6 @@ SOFTWARE.
 
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Config;
-using HappyIRCClientLibrary.Parsers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -39,7 +38,6 @@ namespace IRCServerTestClient
 
             serviceProvider
                 .AddTransient<IConfig, Config>()
-                //.AddTransient<IMessageParser, MessageParser>()
                 .AddTransient<IIrcClient, IrcClient>()
                 .AddTransient(_ => serviceProvider);
 
