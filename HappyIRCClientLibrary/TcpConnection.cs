@@ -76,16 +76,14 @@ namespace HappyIRCClientLibrary
 
                 while (true)
                 {
-                    //if (cancellation.IsCancellationRequested)
-                    //{
-                    //    return;
-                    //}
+                    // TODO: See if there are a more correct way of using the Cancellation Token
                     try
                     {
                         cancellation.ThrowIfCancellationRequested();
                     }
                     catch (OperationCanceledException e)
                     {
+                        log.Debug("ServerListener(): Cancellation Requested");
                         return;
                     }
 
@@ -139,7 +137,7 @@ namespace HappyIRCClientLibrary
                 ircClient.Disconnect();
                 Environment.Exit(0);
             }
-            else if (message.ResponseCode == NumericResponse.RPL_MYINFO) // This respone indicates the server ackknowedges we have connected
+            else if (message.ResponseCode == NumericResponse.RPL_WELCOME) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
                 log.Info("IRC Server acknowledges we are connected.");
