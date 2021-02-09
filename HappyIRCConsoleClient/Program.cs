@@ -49,6 +49,8 @@ namespace HappyIRCConsoleClient
             //Thread.Sleep(15000); // wait for it to connect... we should use an event later
             //client.Join("#windows95");  // Join a channel
 
+            var channel = new Channel(iclient, "#Windows95").Join();
+
             Thread.Sleep(1000);
             //client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
 
