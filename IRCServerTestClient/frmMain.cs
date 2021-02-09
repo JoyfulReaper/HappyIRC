@@ -46,7 +46,7 @@ namespace IRCServerTestClient
         public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
         public Mode Mode { get; set; }
 
-        private IrcClient client;
+        private readonly IrcClient client;
 
         public frmMain(IrcClient client)
         {

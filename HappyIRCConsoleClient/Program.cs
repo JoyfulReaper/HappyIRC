@@ -47,13 +47,13 @@ namespace HappyIRCConsoleClient
             await client.Connect(); // Connect
 
             //Thread.Sleep(15000); // wait for it to connect... we should use an event later
-            client.Join("#windows95");  // Join a channel
+            //client.Join("#windows95");  // Join a channel
 
             Thread.Sleep(1000);
-            client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
+            //client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
 
             Thread.Sleep(4000);
-            client.Part("#windows95"); // Leave the channel
+            //client.Part("#windows95"); // Leave the channel
             Thread.Sleep(1000);
             client.Disconnect(); // Dissconnect
         }

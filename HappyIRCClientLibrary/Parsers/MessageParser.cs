@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 // TODO This will need some cleanup or probably a re-write.
+// See https://tools.ietf.org/html/rfc2812#section-2.3.1
 
 using HappyIRCClientLibrary.Config;
 using HappyIRCClientLibrary.Enums;
