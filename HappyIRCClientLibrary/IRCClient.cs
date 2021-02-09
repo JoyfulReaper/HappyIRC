@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System;
 using HappyIRCClientLibrary.Models;
-using System.Linq;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary.Events;
 
@@ -51,11 +50,9 @@ namespace HappyIRCClientLibrary
 
         private readonly ILog log;
         private readonly IConfig config;
-
         private TcpConnection tcpConnection;
         private Task tcpConnectionTask;
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
-        //private readonly Queue<ServerMessage> messageQueue = new Queue<ServerMessage>();
 
         /// <summary>
         /// Create an IRC Client
@@ -124,6 +121,7 @@ namespace HappyIRCClientLibrary
             ThrowIfNotConnectedOrInitialized();
 
             SendMessageToServer("QUIT\r\n");
+
             cts.Cancel();
             Connected = false;
         }
