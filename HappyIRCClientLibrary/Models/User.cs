@@ -40,6 +40,20 @@ namespace HappyIRCClientLibrary.Models
         /// </summary>
         public string RealName { get; set; }
 
+        // TODO Finish implementing User Mode: RFC 2812 3.1.5 
+        /*
+           a - user is flagged as away;
+           i - marks a users as invisible;
+           w - user receives wallops;
+           r - restricted user connection;
+           o - operator flag;
+           O - local operator flag;
+           s - marks a user for receipt of server notices. (obsolete, but was in use previously)
+        */
+        public List<char> Mode { get; set; }
+
+        private static readonly char[] validModes = { 'a', 'i', 'w', 'r', 'o', 'O', 's' };
+
         public User(string nickName, string realName)
         {
             NickName = nickName;
