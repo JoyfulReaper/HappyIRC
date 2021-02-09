@@ -69,9 +69,11 @@ namespace HappyIRCClientLibrary.Models
         private string name;
 
 
-        public Channel(IIrcClient client)
+        public Channel(IIrcClient client, string name, string key = "")
         {
             this.client = client;
+            this.Name = name;
+            this.Key = key;
         }
 
         /// <summary>
@@ -116,6 +118,7 @@ namespace HappyIRCClientLibrary.Models
             {
                 joinBuilder.Append($" {Key}");
             }
+            joinBuilder.Append("\r\n");
 
             client.SendMessageToServer(joinBuilder.ToString());
 
