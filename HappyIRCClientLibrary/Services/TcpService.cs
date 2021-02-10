@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Enums;
+using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Parsers;
 using Microsoft.Extensions.Hosting;
@@ -40,23 +41,30 @@ namespace HappyIRCClientLibrary.Services
     {
         public bool Connected { get; private set; }
 
-        private readonly IIrcClient ircClient;
+        //private readonly IIrcClient ircClient;
         private readonly ILogger<TcpService> log;
         private readonly IMessageParser messageParser;
         private readonly Server server;
         private NetworkStream networkStream;
 
+        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived;
+
         public TcpService(
-            IIrcClient ircClient,
+            //IIrcClient ircClient,
             ILogger<TcpService> log,
             IHostApplicationLifetime applicationLifetime,
             IMessageParser messageParser,
             Server server)
         {
-            this.ircClient = ircClient;
+            //this.ircClient = ircClient;
             this.log = log;
             this.messageParser = messageParser;
             this.server = server;
+        }
+
+        protected virtual void OnServerMessageReceived(ServerMessageReceivedEventArgs e)
+        {
+            ServerMessageReceived?.Invoke(this, e);
         }
 
         public async Task Start()
@@ -64,7 +72,7 @@ namespace HappyIRCClientLibrary.Services
             using var client = new TcpClient(server.ServerAddress, server.Port);
             networkStream = client.GetStream();
 
-            Queue<string> messageQueue = new Queue<string>();
+            Queue<ServerMessage> messageQueue = new Queue<ServerMessage>();
             byte[] bytes = new byte[1024]; // Read buffer
             string message = string.Empty;
 
@@ -76,11 +84,11 @@ namespace HappyIRCClientLibrary.Services
 
                 var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
 
-                Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
+                //Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
 
-                while (messageQueue.Count > 0)
+                foreach (var currentMessage in splitMessages)
                 {
-                    var currentMessage = messageQueue.Dequeue();
+                    //var currentMessage = messageQueue.Dequeue();
 
                     log.LogDebug("ServerListener(): {currentMessage}", currentMessage.Replace("\r", "").Replace("\n", ""));
 
@@ -94,11 +102,21 @@ namespace HappyIRCClientLibrary.Services
                         if (!Connected)
                         {
                             ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
-                            ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
+                            messageQueue.Enqueue(parsedMessage);
+                            //ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
                         }
                         else
                         {
-                            ircClient.ReceiveMessageFromServer(parsedMessage);
+                            messageQueue.Enqueue(parsedMessage);
+                            if(ServerMessageReceived != null)
+                            {
+                                while (messageQueue.Count > 0)
+                                {
+                                    // PS I hate this code :( Has to be a better way.
+                                    OnServerMessageReceived(new ServerMessageReceivedEventArgs(messageQueue.Dequeue()));
+                                }
+                            }
+                            //ircClient.ReceiveMessageFromServer(parsedMessage);
                         }
                     }
                 }
@@ -179,7 +197,7 @@ namespace HappyIRCClientLibrary.Services
                 log.LogCritical("ConnectionHelper(): Server reports Nick is in use, unable to connect.");
                 log.LogCritical("ConnectionHelper(): Quitting");
 
-                ircClient.Disconnect();
+                SendMessageToServer("QUIT\r\n");
                 Environment.Exit(0);
             }
             else if (message.ResponseCode == NumericResponse.RPL_WELCOME) // This respone indicates the server ackknowedges we have connected
@@ -203,7 +221,7 @@ namespace HappyIRCClientLibrary.Services
         /// Send a message to the IRC server
         /// </summary>
         /// <param name="message"></param>
-        internal void SendMessageToServer(string message)
+        public void SendMessageToServer(string message)
         {
             //TODO Error checking
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
