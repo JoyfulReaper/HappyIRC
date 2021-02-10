@@ -23,20 +23,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using log4net;
+using HappyIRCClientLibrary.Models;
+using System;
 
-namespace HappyIRCClientLibrary.Config
+namespace HappyIRCClientLibrary
 {
-    /// <summary>
-    /// Represents any application configuration options
-    /// </summary>
-    public interface IConfig
+    internal static class IIrcClientExtensions
     {
-        /// <summary>
-        /// Get an instance of a logger
-        /// </summary>
-        /// <param name="name">The name of the logger</param>
-        /// <returns>A logger</returns>
-        ILog GetLogger(string name);
+        public static void ReceiveMessageFromServer(this IIrcClient iface, ServerMessage message)
+        {
+            iface.ReceiveMessageFromServer(message);
+        }
     }
 }

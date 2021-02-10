@@ -23,105 +23,155 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Config;
 using HappyIRCClientLibrary.Enums;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Parsers;
-using log4net;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary
 {
-    public class TcpConnection
+    public class TcpConnection : IHostedService, ITcpConnection
     {
         public bool Connected { get; private set; }
 
+        private readonly IIrcClient ircClient;
+        private readonly ILogger<TcpConnection> log;
         private readonly IMessageParser messageParser;
-        private readonly IrcClient ircClient;
-        private TcpClient client; // TcpClient connection to the server
-        private readonly ILog log;
-        private readonly Server server;
-        private readonly CancellationToken cancellation;
+
         private NetworkStream networkStream;
 
-        public TcpConnection( 
-            IrcClient ircClient,
-            IConfig config,
-            Server server,
-            CancellationToken cancellation)
+        public TcpConnection(
+            IIrcClient ircClient,
+            ILogger<TcpConnection> log,
+            IMessageParser messageParser)
         {
-            this.messageParser = new MessageParser(ircClient.User.NickName, config);
             this.ircClient = ircClient;
-            this.log = config.GetLogger("TcpConnection");
-            this.server = server;
-            this.cancellation = cancellation;
+            this.log = log;
+            this.messageParser = messageParser;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            using var client = new TcpClient(ircClient.Server.ServerAddress, ircClient.Server.Port);
+            networkStream = client.GetStream();
+
+            Queue<string> messageQueue = new Queue<string>();
+            byte[] bytes = new byte[1024]; // Read buffer
+            string message = string.Empty;
+
+            while (true)
+            {
+                // TODO Find a way to see if we are connected before reading (What I was trying wasn't working..)
+                int bytesRead = networkStream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
+                message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
+
+                var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
+
+                Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
+
+                while (messageQueue.Count > 0)
+                {
+                    var currentMessage = messageQueue.Dequeue();
+
+                    log.LogDebug("ServerListener(): {currentMessage}", currentMessage.Replace("\r", "").Replace("\n", ""));
+
+                    if (currentMessage.ToUpperInvariant().StartsWith("PING"))
+                    {
+                        RespondToPing(currentMessage); // We must respond to pings or the server will close the connection
+                    }
+                    else
+                    {
+                        var parsedMessage = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
+                        if (!Connected)
+                        {
+                            ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
+                            ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
+                        }
+                        else
+                        {
+                            ircClient.ReceiveMessageFromServer(parsedMessage);
+                        }
+                    }
+                }
+            }
+            //return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            log.LogDebug("ServerListener(): Cancellation Requested");
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Listen for messages from the server
         /// </summary>
         /// <param name="serverObj">The server to listen to</param>
-        public void ServerListener()
-        {
-            using (client = new TcpClient(server.ServerAddress, server.Port))
-            {
-                networkStream = client.GetStream();
-                Queue<string> messageQueue = new Queue<string>();
-                byte[] bytes = new byte[1024]; // Read buffer
-                string message = string.Empty;
+        //public void ServerListener()
+        //{
+        //    using (client = new TcpClient(server.ServerAddress, server.Port))
+        //    {
+        //        networkStream = client.GetStream();
+        //        Queue<string> messageQueue = new Queue<string>();
+        //        byte[] bytes = new byte[1024]; // Read buffer
+        //        string message = string.Empty;
 
-                while (true)
-                {
-                    // TODO: See if there are a more correct way of using the Cancellation Token
-                    try
-                    {
-                        cancellation.ThrowIfCancellationRequested();
-                    }
-                    catch (OperationCanceledException e)
-                    {
-                        log.Debug("ServerListener(): Cancellation Requested");
-                        return;
-                    }
+        //        while (true)
+        //        {
+        //            // TODO: See if there are a more correct way of using the Cancellation Token
+        //            try
+        //            {
+        //                cancellation.ThrowIfCancellationRequested();
+        //            }
+        //            catch (OperationCanceledException e)
+        //            {
+        //                log.LogDebug("ServerListener(): Cancellation Requested");
+        //                return;
+        //            }
 
-                    // TODO Find a way to see if we are connected before reading (What I was trying wasn't working..)
-                    int bytesRead = networkStream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
-                    message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
+        //            // TODO Find a way to see if we are connected before reading (What I was trying wasn't working..)
+        //            int bytesRead = networkStream.Read(bytes, 0, bytes.Length); // Fill the buffer with bytes from the server
+        //            message = Encoding.ASCII.GetString(bytes, 0, bytesRead); // Convert from bytes to ASCII
 
-                    var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
+        //            var splitMessages = message.Split('\n', StringSplitOptions.RemoveEmptyEntries); // The sever may have given us more than a single line, split on newline
 
-                    Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
+        //            Array.ForEach(splitMessages, x => messageQueue.Enqueue(x)); // Add each line to a queue to proccess
 
-                    while (messageQueue.Count > 0)
-                    {
-                        var currentMessage = messageQueue.Dequeue();
+        //            while (messageQueue.Count > 0)
+        //            {
+        //                var currentMessage = messageQueue.Dequeue();
 
-                        log.Debug($"ServerListener(): {currentMessage.Replace("\r", "").Replace("\n", "")}");
+        //                log.LogDebug("ServerListener(): {currentMessage}", currentMessage.Replace("\r", "").Replace("\n", ""));
 
-                        if (currentMessage.ToUpperInvariant().StartsWith("PING"))
-                        {
-                            RespondToPing(currentMessage); // We must respond to pings or the server will close the connection
-                        }
-                        else
-                        {
-                            var parsedMessage = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
-                            if (!Connected)
-                            {
-                                ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
-                                ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
-                            }
-                            else
-                            {
-                                ircClient.ReceiveMessageFromServer(parsedMessage);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                if (currentMessage.ToUpperInvariant().StartsWith("PING"))
+        //                {
+        //                    RespondToPing(currentMessage); // We must respond to pings or the server will close the connection
+        //                }
+        //                else
+        //                {
+        //                    var parsedMessage = messageParser.ParseMessage(currentMessage); // Get the ServerMessage back from the parser
+        //                    if (!Connected)
+        //                    {
+        //                        ConnectionHelper(parsedMessage); // We aren't connected yet, boo!
+        //                        ircClient.ReceiveMessageFromServer(parsedMessage); // But we still want to send the message
+        //                    }
+        //                    else
+        //                    {
+        //                        ircClient.ReceiveMessageFromServer(parsedMessage);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Check to see if we are conneceted. We send the messages here until we are connected.
@@ -131,8 +181,8 @@ namespace HappyIRCClientLibrary
         {
             if (message.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
             {
-                log.Fatal("ConnectionHelper(): Server reports Nick is in use, unable to connect.");
-                log.Fatal("ConnectionHelper(): Quitting");
+                log.LogCritical("ConnectionHelper(): Server reports Nick is in use, unable to connect.");
+                log.LogCritical("ConnectionHelper(): Quitting");
 
                 ircClient.Disconnect();
                 Environment.Exit(0);
@@ -140,7 +190,7 @@ namespace HappyIRCClientLibrary
             else if (message.ResponseCode == NumericResponse.RPL_WELCOME) // This respone indicates the server ackknowedges we have connected
             {
                 Connected = true;
-                log.Info("IRC Server acknowledges we are connected.");
+                log.LogInformation("IRC Server acknowledges we are connected.");
             }
         }
 
@@ -164,13 +214,7 @@ namespace HappyIRCClientLibrary
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);
 
             networkStream.Write(writeBuffer, 0, writeBuffer.Length);
-            log.Debug($"Sending: {message}".Replace("\r", "").Replace("\n", ""));
-        }
-
-        public void Close()
-        {
-            //TODO Error checking
-            client.Close();
+            log.LogDebug("Sending: {message}", message.Replace("\r", "").Replace("\n", ""));
         }
     }
 }

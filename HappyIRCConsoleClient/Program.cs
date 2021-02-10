@@ -23,41 +23,52 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Threading;
-using System.Threading.Tasks;
+using System;
+using System.IO;
 using HappyIRCClientLibrary;
-using HappyIRCClientLibrary.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace HappyIRCConsoleClient
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            var serviceProvider = ContainerBuilder.BuildContainer(); // This caused the DI container to be built, it holds the services
+            var builder = new ConfigurationBuilder();
+            BuildConfig(builder);
 
-            Server server = new Server("irc.quakenet.org", 6667); // The server object is used to set what server to connect to
-            User user = new User("HappyIRC", "Happy IRC!");        // The user object holds our Nick and Real name
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Build())
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
 
-            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();  // This gets an IRCClient object from the DI
-            IrcClient client = iclient as IrcClient; // This is for testing, but exposes parts of the client that are not defined in the IIrcClient interface (For testing)
+            Log.Logger.Debug("Application Starting");
 
-            client.Initialize(server, user); // This is how you tell the server where to connect and as who using the objects created above
-            await client.Connect(); // Connect
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    services
+                    .AddTransient<IApplicationService, ApplicationService>()
+                    .AddTransient<IIrcClient, IrcClient>()
+                    .AddHostedService<TcpConnection>();
+                })
+                .UseSerilog()
+                .Build();
 
-            //Thread.Sleep(15000); // wait for it to connect... we should use an event later
-            //client.Join("#windows95");  // Join a channel
+            var svc = ActivatorUtilities.CreateInstance<ApplicationService>(host.Services);
+            svc.Run();
+        }
 
-            var channel = new Channel(iclient, "#Windows95").Join();
-
-            Thread.Sleep(1000);
-            //client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
-
-            Thread.Sleep(4000);
-            //client.Part("#windows95"); // Leave the channel
-            Thread.Sleep(1000);
-            client.Disconnect(); // Dissconnect
+        private static void BuildConfig(IConfigurationBuilder builder)
+        {
+            builder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+                .AddEnvironmentVariables();
         }
     }
 }

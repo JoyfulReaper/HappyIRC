@@ -25,14 +25,14 @@ SOFTWARE.
 
 // https://modern.ircdocs.horse/index.html
 
-using HappyIRCClientLibrary.Config;
-using log4net;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using System;
 using HappyIRCClientLibrary.Models;
-using System.Threading.Tasks;
 using HappyIRCClientLibrary.Events;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace HappyIRCClientLibrary
 {
@@ -45,25 +45,27 @@ namespace HappyIRCClientLibrary
         public User User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
-        public List<Channel> Channels { get; private set; } = new List<Channel>(); // The Channels the client is in
+
         public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
 
-        private readonly ILog log;
-        private readonly IConfig config;
-        private TcpConnection tcpConnection;
-        private Task tcpConnectionTask;
+        //private TcpConnection tcpConnection;
+        //private Task tcpConnectionTask;
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly ILogger<IIrcClient> log;
+        private readonly IConfiguration config;
+        private readonly ITcpConnection tcpConnection;
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
-        public IrcClient(
-            IConfig config)
+        public IrcClient(ILogger<IIrcClient> log, 
+            IConfiguration config,
+            ITcpConnection tcpConnection)
         {
-            this.config = config;
-            log = config.GetLogger("IrcClient");
-
             TaskScheduler.UnobservedTaskException += ReceviedUnobservedException;
+            this.log = log;
+            this.config = config;
+            this.tcpConnection = tcpConnection;
         }
 
         /// <summary>
@@ -75,7 +77,7 @@ namespace HappyIRCClientLibrary
         {
             Server = server;
             User = user;
-            tcpConnection = new TcpConnection(this, config, server, cts.Token);
+            //tcpConnection = new TcpConnection(this, server, cts.Token);
             Initialized = true;
         }
 
@@ -85,8 +87,8 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public async Task Connect()
         {
-            log.Info($"Connecting to: {Server.ServerAddress}:{Server.Port}");
-            tcpConnectionTask = Task.Factory.StartNew(tcpConnection.ServerListener, TaskCreationOptions.LongRunning);
+            log.LogInformation("Connecting to: {server}:{port}", Server.ServerAddress, Server.Port);
+            //tcpConnectionTask = Task.Factory.StartNew(tcpConnection.ServerListener, TaskCreationOptions.LongRunning);
 
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
             // TODO look into this more
@@ -116,7 +118,7 @@ namespace HappyIRCClientLibrary
         /// </summary>
         public void Disconnect()
         {
-            log.Info($"Disconnecting from: {Server.ServerAddress}:{Server.Port}");
+            log.LogInformation("Disconnecting from: {server}:{port}", Server.ServerAddress, Server.Port);
 
             ThrowIfNotConnectedOrInitialized();
 
@@ -138,7 +140,7 @@ namespace HappyIRCClientLibrary
             }
             else
             {
-                log.Warn("ReceiveMessageFromServer(): Recevied null message");
+                log.LogWarning("ReceiveMessageFromServer(): Recevied null message");
             }
         }
 
@@ -163,13 +165,13 @@ namespace HappyIRCClientLibrary
             // Maximum message length per RFC 2812 is 512 characters
             if(message.Length > 512)
             {
-                log.Error("SendMessageToServer(): Message exceeds 512 characters");
+                log.LogError("SendMessageToServer(): Message exceeds 512 characters");
                 throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
             }
 
             if(!message.EndsWith("\r\n"))
             {
-                log.Warn($"SendMessageToServer(): Message does not end in CR-LF: {message}");
+                log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
             }
 
             tcpConnection.SendMessageToServer(message);
@@ -179,12 +181,12 @@ namespace HappyIRCClientLibrary
         {
             if (!Connected)
             {
-                log.Error("Client is not connected to a server");
+                log.LogError("Client is not connected to a server");
                 throw new InvalidOperationException("The client is not connected to a server.");
             }
             if (!Initialized)
             {
-                log.Error("Client is not initialized");
+                log.LogError("Client is not initialized");
                 throw new InvalidOperationException("The Client is not initialized.");
             }
         }
@@ -196,7 +198,7 @@ namespace HappyIRCClientLibrary
         /// <param name="e"></param>
         private void ReceviedUnobservedException (object sender, UnobservedTaskExceptionEventArgs e)
         {
-            log.Error("Received Unobserved Exception", e.Exception);
+            log.LogError("Received Unobserved Exception: {exception}", e.Exception);
         }
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////

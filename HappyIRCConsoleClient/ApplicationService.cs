@@ -23,21 +23,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCConsoleClient
 {
-    public interface IIrcClient
+    public class ApplicationService : IApplicationService
     {
-        bool Connected { get; }
-        Server Server { get; }
-        User User { get; }
+        private readonly ILogger<ApplicationService> log;
+        private readonly IConfiguration config;
 
-        void Initialize(Server server, User user);
-        Task Connect();
-        void Disconnect();
-        void SendMessageToServer(string message);
+        public ApplicationService(ILogger<ApplicationService> log, IConfiguration config)
+        {
+            this.log = log;
+            this.config = config;
+        }
+
+        public void Run()
+        {
+            Console.WriteLine("TEST MOTHER FUCKER!");
+
+            for (int i = 0; i < config.GetValue<int>("LoopTimes"); i++)
+            {
+                log.LogDebug("Run Number {runNumber}", i);
+            }
+        }
     }
 }
