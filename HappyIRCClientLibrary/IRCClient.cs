@@ -25,14 +25,13 @@ SOFTWARE.
 
 // https://modern.ircdocs.horse/index.html
 
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Events;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using HappyIRCClientLibrary.Services;
 
 namespace HappyIRCClientLibrary
 {
@@ -48,24 +47,24 @@ namespace HappyIRCClientLibrary
 
         public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
 
-        //private TcpConnection tcpConnection;
-        //private Task tcpConnectionTask;
+
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly ILogger<IIrcClient> log;
-        private readonly IConfiguration config;
-        private readonly TcpConnection tcpConnection;
+        //private readonly IConfiguration config;
+        private readonly ITcpService tcpService;
+        private readonly TcpService tcpConnection;
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
         public IrcClient(ILogger<IIrcClient> log, 
-            IConfiguration config)
-            //TcpConnection tcpConnection)
+            //IConfiguration config,
+            ITcpService tcpService)
         {
             TaskScheduler.UnobservedTaskException += ReceviedUnobservedException;
             this.log = log;
-            this.config = config;
-            //this.tcpConnection = tcpConnection;
+            //this.config = config;
+            this.tcpService = tcpService;
         }
 
         /// <summary>

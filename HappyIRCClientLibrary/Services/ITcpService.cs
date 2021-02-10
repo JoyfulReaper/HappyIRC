@@ -22,21 +22,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-using System;
 
-namespace HappyIRCClientLibrary.Models
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace HappyIRCClientLibrary.Services
 {
-    public class Server : IServer
+    public interface ITcpService
     {
-        public string ServerAddress { get; private set; }
-        public int Port { get; private set; }
-        public string Password { get; set; }
+        bool Connected { get; }
 
-        public Server(string serverAddress, int port, string password = "")
-        {
-            ServerAddress = serverAddress;
-            Port = port;
-            Password = password; // RFC 2812 3.1.1 Password message
-        }
+        void SendMessageToServer(string message);
+        Task Start();
     }
 }

@@ -28,7 +28,7 @@ using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Models
 {
-    public class User
+    public class User : IUser
     {
         /// <summary>
         /// User's Nick

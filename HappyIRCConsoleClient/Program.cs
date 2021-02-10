@@ -25,9 +25,12 @@ SOFTWARE.
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary;
+using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Parsers;
+using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,10 +38,13 @@ using Serilog;
 
 namespace HappyIRCConsoleClient
 {
-    public class Program
+    class Program
     {
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
+            // TODO look into configuration/appsettings.json more
+            // https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.iconfiguration?view=dotnet-plat-ext-5.0
+
             var builder = new ConfigurationBuilder();
             BuildConfig(builder);
 
@@ -48,33 +54,60 @@ namespace HappyIRCConsoleClient
                 .WriteTo.Console()
                 .CreateLogger();
 
-            Log.Logger.Debug("Application Starting");
+            Log.Logger.Information("Application Starting");
 
-            //await new HostBuilder()
-            //    .ConfigureServices((hostContext, services) =>
-            //    {
-            //        services
-            //        .AddTransient<IApplicationService, ApplicationService>()
-            //        .AddTransient<IIrcClient, IrcClient>()
-            //        .AddTransient<IMessageParser, MessageParser>()
-            //        .AddHostedService<TcpConnection>();
-            //    }).RunConsoleAsync();
+            var serviceProvider = await Bootstrap.Initialize(args);
+            var tcpService = serviceProvider.GetRequiredService<ITcpService>();
+            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
-        }
+            var cts = new CancellationTokenSource();
 
-        private static IHostBuilder CreateHostBuilder(string [] args)
-        {
-            return Host.CreateDefaultBuilder()
-                .ConfigureServices((context, services) =>
+            if (tcpService != null)
+            {
+                try
                 {
-                    services
-                    .AddTransient<IApplicationService, ApplicationService>()
-                    .AddTransient<IIrcClient, IrcClient>()
-                    .AddTransient<IMessageParser, MessageParser>()
-                    .AddHostedService<TcpConnection>();
-                })
-                .UseSerilog();
+                    await Task.Run(tcpService.Start, cts.Token);
+
+                    Server server = new Server("irc.quakenet.org", 6667);
+                    User user = new User("HappyIRC", "The Happiest IRC");
+
+                    ircClient.Initialize(server, user);
+                    await ircClient.Connect();
+
+                    Channel win95 = new Channel(ircClient, "Windows95");
+                    win95.SendMessage("Hello IRC world!");
+
+                    await Task.Delay(5000);
+                    ircClient.Disconnect();
+                    cts.Cancel();
+                }
+                catch (OperationCanceledException)
+                {
+                    // We are shutting down!
+                }
+            }
+            else
+            {
+                Console.WriteLine("tcpService failed to start!");
+            }
+
+            Console.ReadKey();
+            cts.Cancel();
         }
+
+        //private static IHostBuilder CreateHostBuilder(string [] args)
+        //{
+        //    return Host.CreateDefaultBuilder()
+        //        .ConfigureServices((context, services) =>
+        //        {
+        //            services
+        //            .AddTransient<IApplicationService, ApplicationService>()
+        //            .AddTransient<IIrcClient, IrcClient>()
+        //            .AddTransient<IMessageParser, MessageParser>()
+        //            .AddHostedService<TcpService>();
+        //        })
+        //        .UseSerilog();
+        //}
 
         private static void BuildConfig(IConfigurationBuilder builder)
         {

@@ -23,10 +23,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace HappyIRCConsoleClient
+using HappyIRCClientLibrary.Enums;
+using System.Collections.Generic;
+
+namespace HappyIRCClientLibrary.Models
 {
-    public interface IApplicationService
+    public interface IServerMessage
     {
-        void Run();
+        string Channel { get; }
+        string Command { get; }
+        string Message { get; }
+        string Nick { get; }
+        List<string> Parameters { get; }
+        string Prefix { get; }
+        NumericResponse ResponseCode { get; }
+        string Trailing { get; }
+        CommandType Type { get; }
     }
 }

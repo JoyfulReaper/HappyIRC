@@ -40,7 +40,7 @@ namespace HappyIRCClientLibrary.Models
     /// Represents a Channel
     /// See RFC 2812 3.2
     /// </summary>
-    public class Channel
+    public class Channel : IChannel
     {
         public string Name
         {

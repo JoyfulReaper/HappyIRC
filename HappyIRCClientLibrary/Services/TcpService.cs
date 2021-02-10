@@ -32,41 +32,36 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Services
 {
-    public class TcpConnection : IHostedService, ITcpConnection
+    public class TcpService : ITcpService
     {
         public bool Connected { get; private set; }
 
         private readonly IIrcClient ircClient;
-        private readonly ILogger<TcpConnection> log;
-        private readonly IHostApplicationLifetime applicationLifetime;
+        private readonly ILogger<TcpService> log;
         private readonly IMessageParser messageParser;
-
+        private readonly Server server;
         private NetworkStream networkStream;
 
-        public TcpConnection(
+        public TcpService(
             IIrcClient ircClient,
-            ILogger<TcpConnection> log,
+            ILogger<TcpService> log,
             IHostApplicationLifetime applicationLifetime,
-            IMessageParser messageParser)
+            IMessageParser messageParser,
+            Server server)
         {
-            applicationLifetime.ApplicationStarted.Register(OnStarted);
-            applicationLifetime.ApplicationStarted.Register(OnStopping);
-            applicationLifetime.ApplicationStarted.Register(OnStopped);
-
             this.ircClient = ircClient;
             this.log = log;
-            this.applicationLifetime = applicationLifetime;
             this.messageParser = messageParser;
+            this.server = server;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task Start()
         {
-            using var client = new TcpClient(ircClient.Server.ServerAddress, ircClient.Server.Port);
+            using var client = new TcpClient(server.ServerAddress, server.Port);
             networkStream = client.GetStream();
 
             Queue<string> messageQueue = new Queue<string>();
@@ -109,28 +104,6 @@ namespace HappyIRCClientLibrary
                 }
             }
             //return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            log.LogDebug("ServerListener(): Cancellation Requested");
-
-            return Task.CompletedTask;
-        }
-
-        private void OnStarted()
-        {
-            log.LogInformation("TcpConnection is starting");
-        }
-
-        private void OnStopping()
-        {
-            log.LogInformation("TcpConnection is stopping");
-        }
-
-        private void OnStopped()
-        {
-            log.LogInformation("TcpConnection is stopped");
         }
 
         /// <summary>
@@ -230,7 +203,7 @@ namespace HappyIRCClientLibrary
         /// Send a message to the IRC server
         /// </summary>
         /// <param name="message"></param>
-        public void SendMessageToServer(string message)
+        internal void SendMessageToServer(string message)
         {
             //TODO Error checking
             byte[] writeBuffer = Encoding.ASCII.GetBytes(message);

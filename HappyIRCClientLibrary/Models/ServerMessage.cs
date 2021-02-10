@@ -31,7 +31,7 @@ namespace HappyIRCClientLibrary.Models
     /// <summary>
     /// Represents a Message from the IRC server
     /// </summary>
-    public class ServerMessage
+    public class ServerMessage : IServerMessage
     {
         public CommandType Type { get; private set; }
         public List<string> Parameters { get; private set; }

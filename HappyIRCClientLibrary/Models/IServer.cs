@@ -22,18 +22,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Models
 {
-    public interface ITcpConnection
+    public interface IServer
     {
-        bool Connected { get; }
-
-        void SendMessageToServer(string message);
-        Task StartAsync(CancellationToken cancellationToken);
-        Task StopAsync(CancellationToken cancellationToken);
+        string Password { get; set; }
+        int Port { get; }
+        string ServerAddress { get; }
     }
 }
