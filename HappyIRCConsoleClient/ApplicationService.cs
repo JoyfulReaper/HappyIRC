@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using HappyIRCClientLibrary;
+using HappyIRCClientLibrary.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -33,21 +35,30 @@ namespace HappyIRCConsoleClient
     {
         private readonly ILogger<ApplicationService> log;
         private readonly IConfiguration config;
+        private readonly IIrcClient ircClient;
 
-        public ApplicationService(ILogger<ApplicationService> log, IConfiguration config)
+        public ApplicationService(ILogger<ApplicationService> log, 
+            IConfiguration config,
+            IIrcClient ircClient)
         {
             this.log = log;
             this.config = config;
+            this.ircClient = ircClient;
         }
 
         public void Run()
         {
-            Console.WriteLine("TEST MOTHER FUCKER!");
+            Console.WriteLine("Please work?");
 
             for (int i = 0; i < config.GetValue<int>("LoopTimes"); i++)
             {
                 log.LogDebug("Run Number {runNumber}", i);
             }
+
+            Server server = new Server("irc.quakenet.org", 6667);
+            User user = new User("HappyIRC", "The Happiest IRC");
+
+            ircClient.Initialize(server, user);
         }
     }
 }

@@ -43,6 +43,7 @@ namespace HappyIRCClientLibrary
 
         private readonly IIrcClient ircClient;
         private readonly ILogger<TcpConnection> log;
+        private readonly IHostApplicationLifetime applicationLifetime;
         private readonly IMessageParser messageParser;
 
         private NetworkStream networkStream;
@@ -50,10 +51,16 @@ namespace HappyIRCClientLibrary
         public TcpConnection(
             IIrcClient ircClient,
             ILogger<TcpConnection> log,
+            IHostApplicationLifetime applicationLifetime,
             IMessageParser messageParser)
         {
+            applicationLifetime.ApplicationStarted.Register(OnStarted);
+            applicationLifetime.ApplicationStarted.Register(OnStopping);
+            applicationLifetime.ApplicationStarted.Register(OnStopped);
+
             this.ircClient = ircClient;
             this.log = log;
+            this.applicationLifetime = applicationLifetime;
             this.messageParser = messageParser;
         }
 
@@ -109,6 +116,21 @@ namespace HappyIRCClientLibrary
             log.LogDebug("ServerListener(): Cancellation Requested");
 
             return Task.CompletedTask;
+        }
+
+        private void OnStarted()
+        {
+            log.LogInformation("TcpConnection is starting");
+        }
+
+        private void OnStopping()
+        {
+            log.LogInformation("TcpConnection is stopping");
+        }
+
+        private void OnStopped()
+        {
+            log.LogInformation("TcpConnection is stopped");
         }
 
         /// <summary>

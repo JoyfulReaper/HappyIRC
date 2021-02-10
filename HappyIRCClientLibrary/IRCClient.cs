@@ -53,19 +53,19 @@ namespace HappyIRCClientLibrary
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly ILogger<IIrcClient> log;
         private readonly IConfiguration config;
-        private readonly ITcpConnection tcpConnection;
+        private readonly TcpConnection tcpConnection;
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
         public IrcClient(ILogger<IIrcClient> log, 
-            IConfiguration config,
-            ITcpConnection tcpConnection)
+            IConfiguration config)
+            //TcpConnection tcpConnection)
         {
             TaskScheduler.UnobservedTaskException += ReceviedUnobservedException;
             this.log = log;
             this.config = config;
-            this.tcpConnection = tcpConnection;
+            //this.tcpConnection = tcpConnection;
         }
 
         /// <summary>

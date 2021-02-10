@@ -25,7 +25,9 @@ SOFTWARE.
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using HappyIRCClientLibrary;
+using HappyIRCClientLibrary.Parsers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,7 +37,7 @@ namespace HappyIRCConsoleClient
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = new ConfigurationBuilder();
             BuildConfig(builder);
@@ -48,19 +50,30 @@ namespace HappyIRCConsoleClient
 
             Log.Logger.Debug("Application Starting");
 
-            var host = Host.CreateDefaultBuilder()
+            //await new HostBuilder()
+            //    .ConfigureServices((hostContext, services) =>
+            //    {
+            //        services
+            //        .AddTransient<IApplicationService, ApplicationService>()
+            //        .AddTransient<IIrcClient, IrcClient>()
+            //        .AddTransient<IMessageParser, MessageParser>()
+            //        .AddHostedService<TcpConnection>();
+            //    }).RunConsoleAsync();
+
+        }
+
+        private static IHostBuilder CreateHostBuilder(string [] args)
+        {
+            return Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
                 {
                     services
                     .AddTransient<IApplicationService, ApplicationService>()
                     .AddTransient<IIrcClient, IrcClient>()
+                    .AddTransient<IMessageParser, MessageParser>()
                     .AddHostedService<TcpConnection>();
                 })
-                .UseSerilog()
-                .Build();
-
-            var svc = ActivatorUtilities.CreateInstance<ApplicationService>(host.Services);
-            svc.Run();
+                .UseSerilog();
         }
 
         private static void BuildConfig(IConfigurationBuilder builder)
