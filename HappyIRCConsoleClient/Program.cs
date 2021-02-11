@@ -30,6 +30,7 @@ using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace HappyIRCConsoleClient
@@ -38,8 +39,9 @@ namespace HappyIRCConsoleClient
     {
         static async Task Main(string[] args)
         {
-            // TODO look into configuration/appsettings.json more
-            // https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.iconfiguration?view=dotnet-plat-ext-5.0
+        // TODO look into configuration/appsettings.json more
+        // https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.iconfiguration?view=dotnet-plat-ext-5.0
+        // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
 
             var builder = new ConfigurationBuilder();
             BuildConfig(builder);
@@ -52,10 +54,13 @@ namespace HappyIRCConsoleClient
 
             Log.Logger.Information("Application Starting");
 
-            var serviceProvider = await Bootstrap.Initialize(args);
-            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
-
             //var cts = new CancellationTokenSource();
+
+            //var serviceProvider = await Bootstrap.Initialize(args);
+            //var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
+
+            using IHost host = Bootstrap.Initialize(args).Build();
+            var ircClient = host.Services.GetRequiredService<IIrcClient>();
 
             if (ircClient != null)
             {
@@ -77,21 +82,9 @@ namespace HappyIRCConsoleClient
             {
                 Console.WriteLine("ircClient is null!");
             }
-        }
 
-        //private static IHostBuilder CreateHostBuilder(string [] args)
-        //{
-        //    return Host.CreateDefaultBuilder()
-        //        .ConfigureServices((context, services) =>
-        //        {
-        //            services
-        //            .AddTransient<IApplicationService, ApplicationService>()
-        //            .AddTransient<IIrcClient, IrcClient>()
-        //            .AddTransient<IMessageParser, MessageParser>()
-        //            .AddHostedService<TcpService>();
-        //        })
-        //        .UseSerilog();
-        //}
+            await host.RunAsync();
+        }
 
         private static void BuildConfig(IConfigurationBuilder builder)
         {
