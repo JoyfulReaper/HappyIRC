@@ -31,6 +31,8 @@ using System;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Events;
 using Microsoft.Extensions.Logging;
+using HappyIRCClientLibrary.Parsers;
+using HappyIRCClientLibrary.Enums;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -49,17 +51,19 @@ namespace HappyIRCClientLibrary.Services
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly ILogger<IIrcClient> log;
         private readonly ITcpClient tcpClient;
-
+        private readonly IMessageParser messageParser;
         private Task tcpClientTask;
 
         /// <summary>
         /// Create an IRC Client
         /// </summary>
         public IrcClient(ILogger<IIrcClient> log,
-            ITcpClient tcpClient)
+            ITcpClient tcpClient,
+            IMessageParser messageParser)
         {
             this.log = log;
             this.tcpClient = tcpClient;
+            this.messageParser = messageParser;
         }
 
         /// <summary>
@@ -92,7 +96,35 @@ namespace HappyIRCClientLibrary.Services
             foreach (var message in client.MessageQueue)
             {
                 log.LogDebug("Message: {message}", message);
+                if(message.ToUpperInvariant().StartsWith("PING"))
+                {
+                    RespondToPing(message);
+                }
+
+                var parsedMessage = messageParser.ParseMessage(message);
+
+                if(!Connected)
+                {
+                    if(parsedMessage.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
+                    {
+                        log.LogCritical("Server reports nick {nick} is in use!", User.NickName);
+                        log.LogCritical("Quiting.");
+
+                        await client.Send("QUIT\r\n");
+                        client.Disconnect();
+                        client.Dispose();
+
+                        Environment.Exit((int)NumericResponse.ERR_NICKNAMEINUSE);
+                    }
+
+                    if(parsedMessage.ResponseCode == NumericResponse.RPL_WELCOME)
+                    {
+                        Connected = true;
+                        log.LogInformation("IRC Server acknowledges we are connected.");
+                    }
+                }
             }
+
             return;
         }
 
@@ -130,11 +162,14 @@ namespace HappyIRCClientLibrary.Services
 
             ThrowIfNotConnectedOrInitialized();
 
-            SendMessageToServer("QUIT\r\n");
+            await SendMessageToServer("QUIT\r\n");
 
             cts.Cancel();
+            tcpClient.Disconnect();
             tcpClient.Dispose();
+
             await tcpClientTask;
+
             Connected = false;
         }
 
@@ -168,23 +203,23 @@ namespace HappyIRCClientLibrary.Services
         /// Send a message to the IRC server
         /// </summary>
         /// <param name="message"></param>
-        public void SendMessageToServer(string message)
+        public async Task SendMessageToServer(string message)
         {
-            //ThrowIfNotConnectedOrInitialized();
+            ThrowIfNotConnectedOrInitialized();
 
-            //// Maximum message length per RFC 2812 is 512 characters
-            //if(message.Length > 512)
-            //{
-            //    log.LogError("SendMessageToServer(): Message exceeds 512 characters");
-            //    throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
-            //}
+            // Maximum message length per RFC 2812 is 512 characters
+            if(message.Length > 512)
+            {
+                log.LogError("SendMessageToServer(): Message exceeds 512 characters");
+                throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
+            }
 
-            //if(!message.EndsWith("\r\n"))
-            //{
-            //    log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
-            //}
+            if(!message.EndsWith("\r\n"))
+            {
+                log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
+            }
 
-            //tcpConnection.SendMessageToServer(message);
+            await tcpClient.Send(message);
         }
 
         private void ThrowIfNotConnectedOrInitialized()
@@ -201,8 +236,11 @@ namespace HappyIRCClientLibrary.Services
             }
         }
 
-
-
+        private async Task RespondToPing(string ping)
+        {
+            string response = $"PONG {ping.Substring(5)}\r\n"; // we just reply with the same thing the server send minus "PING "
+            tcpClient.Send(response);
+        }
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
 
