@@ -37,6 +37,6 @@ namespace HappyIRCClientLibrary.Services
         void Initialize(Server server, User user);
         Task Connect();
         Task Disconnect();
-        void SendMessageToServer(string message);
+        Task SendMessageToServer(string message);
     }
 }
