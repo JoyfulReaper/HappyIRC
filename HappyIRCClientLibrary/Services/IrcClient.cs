@@ -31,7 +31,6 @@ using System;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Events;
 using Microsoft.Extensions.Logging;
-using HappyIRCClientLibrary.Services;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -86,41 +85,40 @@ namespace HappyIRCClientLibrary.Services
             tcpClient.ReceivedCallback = onTcpMessageReceived;
 
             tcpClientTask = tcpClient.RunAsync();
-
-            //log.LogInformation("Connecting to: {server}:{port}", Server.ServerAddress, Server.Port);
-            ////tcpConnectionTask = Task.Factory.StartNew(tcpConnection.ServerListener, TaskCreationOptions.LongRunning);
-
-            //// Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
-            //// TODO look into this more
-            //Thread.Sleep(4000); 
-
-            //if(!string.IsNullOrEmpty(Server.Password))
-            //{
-            //    tcpConnection.SendMessageToServer($"PASS {Server.Password}\r\n");
-            //}
-
-            //tcpConnection.SendMessageToServer($"NICK {User.NickName}\r\n");
-
-            ////TODO Allow initial mode to be set: RFC2812 3.1.3 User message
-            //tcpConnection.SendMessageToServer($"USER {User.NickName} 0 * :{User.RealName}\r\n");
-
-            //while (!tcpConnection.Connected)
-            //{
-            //    Thread.Sleep(1000);
-            //}
-
-            //Connected = true;
-            //return;
         }
 
-        private Task onTcpMessageReceived(ITcpClient client, int messageCount)
+        private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
         {
-            return Task.CompletedTask;
+            foreach (var message in client.MessageQueue)
+            {
+                log.LogDebug("Message: {message}", message);
+            }
+            return;
         }
 
-        private Task onTcpConnected(ITcpClient client)
+        private async Task onTcpConnected(ITcpClient client)
         {
-            return Task.CompletedTask;
+            log.LogDebug("onTcpConnected(): TCP Connection Established to Server");
+  
+            // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
+            // TODO look into this more
+            await Task.Delay(4000); 
+
+            if(!string.IsNullOrEmpty(Server.Password))
+            {
+                await client.Send($"PASS {Server.Password}\r\n");
+            }
+
+            await client.Send($"NICK {User.NickName}\r\n");
+
+            //TODO Allow initial mode to be set: RFC2812 3.1.3 User message
+            await client.Send($"USER {User.NickName} 0 * :{User.RealName}\r\n");
+
+            while (!Connected)
+            {
+                await Task.Delay(1000);
+            }
+            return;
         }
 
         /// <summary>
@@ -202,6 +200,8 @@ namespace HappyIRCClientLibrary.Services
                 throw new InvalidOperationException("The Client is not initialized.");
             }
         }
+
+
 
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
