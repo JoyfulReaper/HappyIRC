@@ -33,6 +33,7 @@ using HappyIRCClientLibrary.Events;
 using Microsoft.Extensions.Logging;
 using HappyIRCClientLibrary.Parsers;
 using HappyIRCClientLibrary.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -41,31 +42,43 @@ namespace HappyIRCClientLibrary.Services
     /// </summary>
     public class IrcClient : IIrcClient
     {
+        #region Properties
         public Server Server { get; private set; } // The IRC server to connect to
         public User User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
+        #endregion Properties
 
+        #region Events
         public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
+        #endregion Events
 
+        #region Private Data
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
         private readonly ILogger<IIrcClient> log;
         private readonly ITcpClient tcpClient;
         private readonly IMessageParser messageParser;
+        private readonly IConfiguration configuration;
         private Task tcpClientTask;
+        #endregion Private Data
 
+        #region Constructors
         /// <summary>
         /// Create an IRC Client
         /// </summary>
         public IrcClient(ILogger<IIrcClient> log,
             ITcpClient tcpClient,
-            IMessageParser messageParser)
+            IMessageParser messageParser,
+            IConfiguration configuration)
         {
             this.log = log;
             this.tcpClient = tcpClient;
             this.messageParser = messageParser;
+            this.configuration = configuration;
         }
+        #endregion Constructors
 
+        #region Public Methods
         /// <summary>
         /// Initialize the client before connecting
         /// </summary>
@@ -78,6 +91,7 @@ namespace HappyIRCClientLibrary.Services
             Initialized = true;
         }
 
+        
         /// <summary>
         /// Connect to the IRC Server
         /// See RFC 2812 Section 3.1: Connection Registration
@@ -90,6 +104,27 @@ namespace HappyIRCClientLibrary.Services
 
             tcpClientTask = tcpClient.RunAsync();
         }
+
+        /// <summary>
+        /// Disconnect from the IRC server
+        /// </summary>
+        public async Task Disconnect()
+        {
+            log.LogInformation("Disconnecting from: {server}:{port}", Server.ServerAddress, Server.Port);
+
+            ThrowIfNotConnectedOrInitialized();
+
+            await SendMessageToServer("QUIT\r\n");
+
+            cts.Cancel();
+            tcpClient.Disconnect();
+            tcpClient.Dispose();
+
+            await tcpClientTask;
+
+            Connected = false;
+        }
+        #endregion Public Methods
 
         private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
         {
@@ -153,40 +188,29 @@ namespace HappyIRCClientLibrary.Services
             return;
         }
 
-        /// <summary>
-        /// Disconnect from the IRC server
-        /// </summary>
-        public async Task Disconnect()
-        {
-            log.LogInformation("Disconnecting from: {server}:{port}", Server.ServerAddress, Server.Port);
 
+
+        /// <summary>
+        /// Send a message to the IRC server
+        /// </summary>
+        /// <param name="message"></param>
+        public async Task SendMessageToServer(string message)
+        {
             ThrowIfNotConnectedOrInitialized();
 
-            await SendMessageToServer("QUIT\r\n");
-
-            cts.Cancel();
-            tcpClient.Disconnect();
-            tcpClient.Dispose();
-
-            await tcpClientTask;
-
-            Connected = false;
-        }
-
-        /// <summary>
-        /// When the TcpListen thread recevices a message it is sent here.
-        /// </summary>
-        /// <param name="message">The message that was received from the server</param>
-        internal void ReceiveMessageFromServer(ServerMessage message)
-        {
-            if(message != null)
+            // Maximum message length per RFC 2812 is 512 characters
+            if (message.Length > 512)
             {
-                OnServerMessageReceived(new ServerMessageReceivedEventArgs(message));
+                log.LogError("SendMessageToServer(): Message exceeds 512 characters");
+                throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
             }
-            else
+
+            if (!message.EndsWith("\r\n"))
             {
-                log.LogWarning("ReceiveMessageFromServer(): Recevied null message");
+                log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
             }
+
+            await tcpClient.Send(message);
         }
 
         /// <summary>
@@ -199,40 +223,17 @@ namespace HappyIRCClientLibrary.Services
             ServerMessageReceived?.Invoke(this, e);
         }
 
-        /// <summary>
-        /// Send a message to the IRC server
-        /// </summary>
-        /// <param name="message"></param>
-        public async Task SendMessageToServer(string message)
-        {
-            ThrowIfNotConnectedOrInitialized();
-
-            // Maximum message length per RFC 2812 is 512 characters
-            if(message.Length > 512)
-            {
-                log.LogError("SendMessageToServer(): Message exceeds 512 characters");
-                throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
-            }
-
-            if(!message.EndsWith("\r\n"))
-            {
-                log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
-            }
-
-            await tcpClient.Send(message);
-        }
-
         private void ThrowIfNotConnectedOrInitialized()
         {
-            if (!Connected)
-            {
-                log.LogError("Client is not connected to a server");
-                throw new InvalidOperationException("The client is not connected to a server.");
-            }
             if (!Initialized)
             {
                 log.LogError("Client is not initialized");
                 throw new InvalidOperationException("The Client is not initialized.");
+            }
+            if (!Connected)
+            {
+                log.LogError("Client is not connected to a server");
+                throw new InvalidOperationException("The client is not connected to a server.");
             }
         }
 
@@ -243,6 +244,22 @@ namespace HappyIRCClientLibrary.Services
         }
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
+
+        ///// <summary>
+        ///// When the TcpListen thread recevices a message it is sent here.
+        ///// </summary>
+        ///// <param name="message">The message that was received from the server</param>
+        //internal void ReceiveMessageFromServer(ServerMessage message)
+        //{
+        //    if(message != null)
+        //    {
+        //        OnServerMessageReceived(new ServerMessageReceivedEventArgs(message));
+        //    }
+        //    else
+        //    {
+        //        log.LogWarning("ReceiveMessageFromServer(): Recevied null message");
+        //    }
+        //}
 
         ///// <summary>
         ///// Join a channel

@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// Heavly based off https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/AsyncTcpClient.cs
+// Heavily based off https://github.com/ygoe/AsyncTcpClient/blob/master/AsyncTcpClient/AsyncTcpClient.cs
 // Copyright (c) 2018-2020, Yves Goergen, https://unclassified.software
 //
 // Copying and distribution of this file, with or without modification, are permitted provided the
@@ -97,6 +97,7 @@ namespace HappyIRCClientLibrary.Services
         {
             bool isConnected = false;
 
+            // Could add reconnection logic here
             //do
             //{
             tcpClient = new System.Net.Sockets.TcpClient(AddressFamily.InterNetworkV6);
