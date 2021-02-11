@@ -42,13 +42,10 @@ namespace HappyIRCClientLibrary.Parsers
     {
         // TODO clean up/re-write/improve this class
 
-        private readonly string clientNick; // User's nickname
         private readonly ILogger<MessageParser> log;
 
-        public MessageParser(IIrcClient ircClient,
-            ILogger<MessageParser> log)
+        public MessageParser(ILogger<MessageParser> log)
         {
-            this.clientNick = ircClient.User.NickName;
             this.log = log;
         }
 
@@ -141,14 +138,17 @@ namespace HappyIRCClientLibrary.Parsers
 
             if (command == "PRIVMSG")
             {
-                if (parameters[0] == clientNick)
-                {
-                    type = CommandType.PrivateMessage;
-                }
-                else
-                {
-                    type = CommandType.ChannelMessage;
-                }
+                // TODO Fix this
+
+                //if (parameters[0] == clientNick)
+                //{
+                //    type = CommandType.PrivateMessage;
+                //}
+                //else
+                //{
+                //    type = CommandType.ChannelMessage;
+                //}
+                type = CommandType.PrivateMessage;
             }
 
             if (int.TryParse(command, out int reply))

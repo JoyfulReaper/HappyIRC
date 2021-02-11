@@ -25,13 +25,11 @@ SOFTWARE.
 
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
-using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Models;
+using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace HappyIRCConsoleClient

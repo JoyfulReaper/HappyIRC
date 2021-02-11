@@ -31,6 +31,7 @@ SOFTWARE.
  * equivalence of two nicknames or channel names. 
  */
 
+using HappyIRCClientLibrary.Services;
 using System;
 using System.Text;
 
