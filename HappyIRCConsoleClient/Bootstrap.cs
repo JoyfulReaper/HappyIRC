@@ -14,9 +14,10 @@ namespace HappyIRCConsoleClient
             var serviceCollection = new ServiceCollection();
             var serviceProvider = serviceCollection
                     .AddLogging(configure => configure.AddSerilog())
-                    .AddTransient<IIrcClient, IrcClient>()
+                    .AddOptions()
+                    .AddTransient<ITcpClient, TcpClient>()
                     .AddTransient<IMessageParser, MessageParser>()
-                    .AddTransient<ITcpService, TcpService>()
+                    .AddTransient<IIrcClient, IrcClient>()
                     .BuildServiceProvider();
 
             return serviceProvider;

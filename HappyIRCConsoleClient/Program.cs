@@ -29,8 +29,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Models;
-using HappyIRCClientLibrary.Parsers;
-using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,42 +55,28 @@ namespace HappyIRCConsoleClient
             Log.Logger.Information("Application Starting");
 
             var serviceProvider = await Bootstrap.Initialize(args);
-            var tcpService = serviceProvider.GetRequiredService<ITcpService>();
             var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
-            var cts = new CancellationTokenSource();
+            //var cts = new CancellationTokenSource();
 
-            if (tcpService != null)
+            if (ircClient != null)
             {
-                try
-                {
-                    await Task.Run(tcpService.Start, cts.Token);
+                Server server = new Server("irc.quakenet.org", 6667);
+                User user = new User("HappyIRC", "The Happiest IRC");
 
-                    Server server = new Server("irc.quakenet.org", 6667);
-                    User user = new User("HappyIRC", "The Happiest IRC");
+                ircClient.Initialize(server, user);
+                await ircClient.Connect();
 
-                    ircClient.Initialize(server, user);
-                    await ircClient.Connect();
+                Channel win95 = new Channel(ircClient, "#Windows95");
+                win95.SendMessage("Hello IRC world!");
 
-                    Channel win95 = new Channel(ircClient, "Windows95");
-                    win95.SendMessage("Hello IRC world!");
-
-                    await Task.Delay(5000);
-                    ircClient.Disconnect();
-                    cts.Cancel();
-                }
-                catch (OperationCanceledException)
-                {
-                    // We are shutting down!
-                }
+                await Task.Delay(5000);
+                ircClient.Disconnect();
             }
             else
             {
-                Console.WriteLine("tcpService failed to start!");
+                Console.WriteLine("ircClient is null!");
             }
-
-            Console.ReadKey();
-            cts.Cancel();
         }
 
         //private static IHostBuilder CreateHostBuilder(string [] args)
