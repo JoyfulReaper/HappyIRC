@@ -30,7 +30,6 @@ using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace HappyIRCConsoleClient
@@ -52,15 +51,12 @@ namespace HappyIRCConsoleClient
                 .WriteTo.Console()
                 .CreateLogger();
 
-            Log.Logger.Information("Application Starting");
+            Log.Logger.Information("HappyIRCConsoleClient Starting");
 
             //var cts = new CancellationTokenSource();
 
-            //var serviceProvider = await Bootstrap.Initialize(args);
-            //var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
-
-            using IHost host = Bootstrap.Initialize(args).Build();
-            var ircClient = host.Services.GetRequiredService<IIrcClient>();
+            var serviceProvider = Bootstrap.Initialize(args);
+            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
             if (ircClient != null)
             {
@@ -72,18 +68,17 @@ namespace HappyIRCConsoleClient
 
                 //Channel win95 = new Channel(ircClient, "#Windows95");
                 //win95.SendMessage("Hello IRC world!");
-                while (true)
-                {
-                    await Task.Delay(120000);
-                }
+                //while (true)
+                //{
+                //    await Task.Delay(120000);
+                //}
+                await Task.Delay(30000);
                 await ircClient.Disconnect();
             }
             else
             {
                 Console.WriteLine("ircClient is null!");
             }
-
-            await host.RunAsync();
         }
 
         private static void BuildConfig(IConfigurationBuilder builder)

@@ -194,6 +194,7 @@ namespace HappyIRCClientLibrary.Services
 
         public void Disconnect()
         {
+            log.LogInformation("Disconnecting from: {server}:{port}", Server.ServerAddress, Server.Port);
             tcpClient.Client.Disconnect(false);
         }
 

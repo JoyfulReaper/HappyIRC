@@ -40,7 +40,7 @@ namespace HappyIRCClientLibrary.Services
     /// <summary>
     /// Represents an IRC client
     /// </summary>
-    public class IrcClient : IIrcClient
+    public class IrcClient : IIrcClient, IDisposable
     {
         #region Properties
         public Server Server { get; private set; } // The IRC server to connect to
@@ -110,8 +110,6 @@ namespace HappyIRCClientLibrary.Services
         /// </summary>
         public async Task Disconnect()
         {
-            log.LogInformation("Disconnecting from: {server}:{port}", Server.ServerAddress, Server.Port);
-
             ThrowIfNotConnectedOrInitialized();
 
             await SendMessageToServer("QUIT\r\n");
@@ -124,71 +122,11 @@ namespace HappyIRCClientLibrary.Services
 
             Connected = false;
         }
-        #endregion Public Methods
 
-        private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
+        public async void Dispose()
         {
-            foreach (var message in client.MessageQueue)
-            {
-                log.LogDebug("Message: {message}", message);
-                if(message.ToUpperInvariant().StartsWith("PING"))
-                {
-                    RespondToPing(message);
-                }
-
-                var parsedMessage = messageParser.ParseMessage(message);
-
-                if(!Connected)
-                {
-                    if(parsedMessage.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
-                    {
-                        log.LogCritical("Server reports nick {nick} is in use!", User.NickName);
-                        log.LogCritical("Quiting.");
-
-                        await client.Send("QUIT\r\n");
-                        client.Disconnect();
-                        client.Dispose();
-
-                        Environment.Exit((int)NumericResponse.ERR_NICKNAMEINUSE);
-                    }
-
-                    if(parsedMessage.ResponseCode == NumericResponse.RPL_WELCOME)
-                    {
-                        Connected = true;
-                        log.LogInformation("IRC Server acknowledges we are connected.");
-                    }
-                }
-            }
-
-            return;
+            await Disconnect();
         }
-
-        private async Task onTcpConnected(ITcpClient client)
-        {
-            log.LogDebug("onTcpConnected(): TCP Connection Established to Server");
-  
-            // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
-            // TODO look into this more
-            await Task.Delay(4000); 
-
-            if(!string.IsNullOrEmpty(Server.Password))
-            {
-                await client.Send($"PASS {Server.Password}\r\n");
-            }
-
-            await client.Send($"NICK {User.NickName}\r\n");
-
-            //TODO Allow initial mode to be set: RFC2812 3.1.3 User message
-            await client.Send($"USER {User.NickName} 0 * :{User.RealName}\r\n");
-
-            while (!Connected)
-            {
-                await Task.Delay(1000);
-            }
-            return;
-        }
-
-
 
         /// <summary>
         /// Send a message to the IRC server
@@ -212,15 +150,77 @@ namespace HappyIRCClientLibrary.Services
 
             await tcpClient.Send(message);
         }
+        #endregion Public Methods
 
-        /// <summary>
-        /// A message has been received by the server,
-        /// fire an event to let the subscribers know.
-        /// </summary>
-        /// <param name="e">The event args</param>
-        protected virtual void OnServerMessageReceived(ServerMessageReceivedEventArgs e)
+        #region Private Methods
+        private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
         {
-            ServerMessageReceived?.Invoke(this, e);
+            while (client.MessageQueue.Count > 0)
+            {
+                var message = client.MessageQueue.Dequeue();
+
+                log.LogDebug("MessageReceived: {message}", message);
+                if(message.ToUpperInvariant().StartsWith("PING"))
+                {
+                    RespondToPing(message);
+                }
+
+                var parsedMessage = messageParser.ParseMessage(message);
+
+                if (!Connected)
+                {
+                    if (parsedMessage.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
+                    {
+                        log.LogCritical("Server reports nick {nick} is in use!", User.NickName);
+                        log.LogCritical("Quiting.");
+
+                        await client.Send("QUIT\r\n");
+                        client.Disconnect();
+                        client.Dispose();
+
+                        Environment.Exit((int)NumericResponse.ERR_NICKNAMEINUSE);
+                    }
+
+                    if (parsedMessage.ResponseCode == NumericResponse.RPL_WELCOME)
+                    {
+                        Connected = true;
+                        log.LogInformation("IRC Server acknowledges we are connected.");
+                    }
+                }
+
+                OnServerMessageReceived(new ServerMessageReceivedEventArgs(parsedMessage));
+            }
+            return;
+        }
+
+        private async Task onTcpConnected(ITcpClient client)
+        {
+            log.LogInformation("onTcpConnected(): TCP Connection Established to Server");
+  
+            // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
+            // TODO look into this more
+            await Task.Delay(4000); 
+
+            if(!string.IsNullOrEmpty(Server.Password))
+            {
+                await client.Send($"PASS {Server.Password}\r\n");
+            }
+
+            await client.Send($"NICK {User.NickName}\r\n");
+
+            //TODO Allow initial mode to be set: RFC2812 3.1.3 User message
+            await client.Send($"USER {User.NickName} 0 * :{User.RealName}\r\n");
+
+            while (!Connected)
+            {
+                await Task.Delay(500);
+                if(!client.IsConnected)
+                {
+                    log.LogError("TcpClient is not connected, but we are waiting for the IRC server to ackknowlege our connection.");
+                    throw new InvalidOperationException("Something happened, the TCP connection isn't open!");
+                }
+            }
+            return;
         }
 
         private void ThrowIfNotConnectedOrInitialized()
@@ -242,6 +242,19 @@ namespace HappyIRCClientLibrary.Services
             string response = $"PONG {ping.Substring(5)}\r\n"; // we just reply with the same thing the server send minus "PING "
             tcpClient.Send(response);
         }
+        #endregion Private Methods
+
+        #region Protected Methods
+        /// <summary>
+        /// A message has been received by the server,
+        /// fire an event to let the subscribers know.
+        /// </summary>
+        /// <param name="e">The event args</param>
+        protected virtual void OnServerMessageReceived(ServerMessageReceivedEventArgs e)
+        {
+            ServerMessageReceived?.Invoke(this, e);
+        }
+        #endregion Protected Methods
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
 
