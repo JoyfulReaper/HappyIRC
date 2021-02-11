@@ -24,15 +24,19 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Models;
-using System;
+using System.Threading.Tasks;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Services
 {
-    internal static class IIrcClientExtensions
+    public interface IIrcClient
     {
-        public static void ReceiveMessageFromServer(this IIrcClient iface, ServerMessage message)
-        {
-            iface.ReceiveMessageFromServer(message);
-        }
+        bool Connected { get; }
+        Server Server { get; }
+        User User { get; }
+
+        void Initialize(Server server, User user);
+        Task Connect();
+        Task Disconnect();
+        void SendMessageToServer(string message);
     }
 }

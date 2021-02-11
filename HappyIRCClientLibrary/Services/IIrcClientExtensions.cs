@@ -23,16 +23,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Threading;
-using System.Threading.Tasks;
+using HappyIRCClientLibrary.Models;
+using System;
 
 namespace HappyIRCClientLibrary.Services
 {
-    public interface ITcpService
+    internal static class IIrcClientExtensions
     {
-        bool Connected { get; }
-
-        void SendMessageToServer(string message);
-        Task Start();
+        public static void ReceiveMessageFromServer(this IIrcClient iface, ServerMessage message)
+        {
+            iface.ReceiveMessageFromServer(message);
+        }
     }
 }

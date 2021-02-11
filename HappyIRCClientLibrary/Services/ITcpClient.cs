@@ -24,19 +24,28 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Services
 {
-    public interface IIrcClient
+    public interface ITcpClient
     {
-        bool Connected { get; }
-        Server Server { get; }
-        User User { get; }
+        Action<ITcpClient, bool> ClosedCallback { get; set; }
+        Task ClosedTask { get; }
+        Func<ITcpClient, Task> ConnectedCallback { get; set; }
+        TimeSpan ConnectTimeout { get; set; }
+        bool IsClosing { get; }
+        bool IsConnected { get; }
+        Queue<string> MessageQueue { get; set; }
+        Func<ITcpClient, int, Task> ReceivedCallback { get; set; }
+        Server Server { get; set; }
 
-        void Initialize(Server server, User user);
-        Task Connect();
         void Disconnect();
-        void SendMessageToServer(string message);
+        void Dispose();
+        Task RunAsync();
+        Task Send(string message, CancellationToken cancellationToken = default);
     }
 }
