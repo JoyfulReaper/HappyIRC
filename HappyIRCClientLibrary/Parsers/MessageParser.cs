@@ -24,11 +24,11 @@ SOFTWARE.
 */
 
 // TODO This will need some cleanup or probably a re-write.
+// See https://tools.ietf.org/html/rfc2812#section-2.3.1
 
-using HappyIRCClientLibrary.Config;
 using HappyIRCClientLibrary.Enums;
 using HappyIRCClientLibrary.Models;
-using log4net;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -42,16 +42,11 @@ namespace HappyIRCClientLibrary.Parsers
     {
         // TODO clean up/re-write/improve this class
 
-        private readonly string clientNick; // User's nickname
-        private readonly IConfig config;
+        private readonly ILogger<MessageParser> log;
 
-        private readonly ILog log;
-
-        public MessageParser(string nick, IConfig config)
+        public MessageParser(ILogger<MessageParser> log)
         {
-            this.clientNick = nick;
-            this.config = config;
-            log = config.GetLogger("ParseMessage");
+            this.log = log;
         }
 
         public ServerMessage ParseMessage(string message)
@@ -130,7 +125,7 @@ namespace HappyIRCClientLibrary.Parsers
             }
             sb.Append($" trailing: {trailing}");
             var debugMessage = sb.ToString().Replace("\r", "").Replace("\n", "");
-            log.Debug(debugMessage);
+            log.LogDebug("{message}", debugMessage);
 
             return serverMessage;
         }
@@ -143,26 +138,29 @@ namespace HappyIRCClientLibrary.Parsers
 
             if (command == "PRIVMSG")
             {
-                if (parameters[0] == clientNick)
-                {
-                    type = CommandType.PrivateMessage;
-                }
-                else
-                {
-                    type = CommandType.ChannelMessage;
-                }
+                // TODO Fix this
+
+                //if (parameters[0] == clientNick)
+                //{
+                //    type = CommandType.PrivateMessage;
+                //}
+                //else
+                //{
+                //    type = CommandType.ChannelMessage;
+                //}
+                type = CommandType.PrivateMessage;
             }
 
             if (int.TryParse(command, out int reply))
             {
                 type = CommandType.NumericReply;
-                log.Debug($"Found numeric reply: {reply}");
+                log.LogDebug("Found numeric reply: {reply}", reply);
 
 
                 if (Enum.IsDefined(typeof(NumericResponse), reply))
                 {
                     numericReply = (NumericResponse)reply;
-                    log.Debug($"I know the numeric reply as: {numericReply}");
+                    log.LogDebug("I know the numeric reply as: {numericReply}", numericReply);
                 }
             }
 

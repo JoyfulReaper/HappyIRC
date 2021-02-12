@@ -23,11 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Threading;
+using System;
+using System.IO;
 using System.Threading.Tasks;
-using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Models;
+using HappyIRCClientLibrary.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace HappyIRCConsoleClient
 {
@@ -35,27 +38,60 @@ namespace HappyIRCConsoleClient
     {
         static async Task Main(string[] args)
         {
-            var serviceProvider = ContainerBuilder.BuildContainer(); // This caused the DI container to be built, it holds the services
+        // TODO look into configuration/appsettings.json more
+        // https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.iconfiguration?view=dotnet-plat-ext-5.0
+        // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
 
-            Server server = new Server("irc.quakenet.org", 6667); // The server object is used to set what server to connect to
-            User user = new User("HappyIRC", "Happy IRC!");        // The user object holds our Nick and Real name
+            var builder = new ConfigurationBuilder();
+            BuildConfig(builder);
 
-            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();  // This gets an IRCClient object from the DI
-            IrcClient client = iclient as IrcClient; // This is for testing, but exposes parts of the client that are not defined in the IIrcClient interface (For testing)
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Build())
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
 
-            client.Initialize(server, user); // This is how you tell the server where to connect and as who using the objects created above
-            await client.Connect(); // Connect
+            Log.Logger.Information("HappyIRCConsoleClient Starting");
 
-            //Thread.Sleep(15000); // wait for it to connect... we should use an event later
-            client.Join("#windows95");  // Join a channel
+            //var cts = new CancellationTokenSource();
 
-            Thread.Sleep(1000);
-            client.SendMessage("#windows95", "I swear I'm not a bot!"); // Send a message
+            var serviceProvider = Bootstrap.Initialize(args);
+            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
-            Thread.Sleep(4000);
-            client.Part("#windows95"); // Leave the channel
-            Thread.Sleep(1000);
-            client.Disconnect(); // Dissconnect
+            if (ircClient != null)
+            {
+                Server server = new Server("irc.quakenet.org", 6667);
+                User user = new User("HappyIRC", "The Happiest IRC");
+
+                ircClient.Initialize(server, user);
+                await ircClient.Connect();
+
+                Channel win95 = new Channel(ircClient, "#Windows95");
+                win95.Join();
+                win95.SendMessage("Hello IRC world!");
+
+                await Task.Delay(35000);
+                win95.Part("Goodbye IRC world!");
+
+                //while (true)
+                //{
+                //    await Task.Delay(120000);
+                //}
+                await Task.Delay(15000);
+                await ircClient.Disconnect();
+            }
+            else
+            {
+                Console.WriteLine("ircClient is null!");
+            }
+        }
+
+        private static void BuildConfig(IConfigurationBuilder builder)
+        {
+            builder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+                .AddEnvironmentVariables();
         }
     }
 }

@@ -23,22 +23,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Models;
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace HappyIRCClientLibrary
+namespace HappyIRCClientLibrary.Models
 {
-    public interface IIrcClient
+    public interface IUser
     {
-        List<Channel> Channels { get; }
-        bool Connected { get; }
-        Server Server { get; }
-        User User { get; }
+        List<char> Mode { get; set; }
+        string NickName { get; set; }
+        string RealName { get; set; }
 
-        void Initialize(Server server, User user);
-        Task Connect();
-        void Disconnect();
-        void SendMessageToServer(string message);
+        void ReceiveMessage(object sender, EventArgs e);
+        void SendMessage(string message);
     }
 }

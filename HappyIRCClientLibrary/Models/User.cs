@@ -28,8 +28,9 @@ using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Models
 {
-    public class User
+    public class User : IUser
     {
+        #region Properties
         /// <summary>
         /// User's Nick
         /// </summary>
@@ -40,12 +41,32 @@ namespace HappyIRCClientLibrary.Models
         /// </summary>
         public string RealName { get; set; }
 
+        // TODO Finish implementing User Mode: RFC 2812 3.1.5 
+        /*
+           a - user is flagged as away;
+           i - marks a users as invisible;
+           w - user receives wallops;
+           r - restricted user connection;
+           o - operator flag;
+           O - local operator flag;
+           s - marks a user for receipt of server notices. (obsolete, but was in use previously)
+        */
+        public List<char> Mode { get; set; }
+        #endregion Properties
+
+        #region Private Data
+        private static readonly char[] validModes = { 'a', 'i', 'w', 'r', 'o', 'O', 's' };
+        #endregion Private Data
+
+        #region Constructors
         public User(string nickName, string realName)
         {
             NickName = nickName;
             RealName = realName;
         }
+        #endregion Constructors
 
+        #region Public Methods
         /// <summary>
         /// Send a private message to this user
         /// </summary>
@@ -64,5 +85,6 @@ namespace HappyIRCClientLibrary.Models
         {
             throw new NotImplementedException();
         }
+        #endregion Public Methods
     }
 }

@@ -23,27 +23,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary;
-using HappyIRCClientLibrary.Config;
-using HappyIRCClientLibrary.Parsers;
-using Microsoft.Extensions.DependencyInjection;
+using HappyIRCClientLibrary.Events;
+using HappyIRCClientLibrary.Models;
 using System;
+using System.Threading.Tasks;
 
-namespace IRCServerTestClient
+namespace HappyIRCClientLibrary.Services
 {
-    public class ContainerBuilder
+    public interface IIrcClient
     {
-        public static IServiceProvider BuildContainer()
-        {
-            var serviceProvider = new ServiceCollection();
+        bool Connected { get; }
+        Server Server { get; }
+        User User { get; }
 
-            serviceProvider
-                .AddTransient<IConfig, Config>()
-                //.AddTransient<IMessageParser, MessageParser>()
-                .AddTransient<IIrcClient, IrcClient>()
-                .AddTransient(_ => serviceProvider);
+        event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived;
 
-            return serviceProvider.BuildServiceProvider();
-        }
+        void Initialize(Server server, User user);
+        Task Connect();
+        Task Disconnect();
+        Task SendMessageToServer(string message);
     }
 }

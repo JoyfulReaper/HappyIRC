@@ -23,28 +23,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using log4net;
-using log4net.Config;
-using log4net.Repository;
-using System.IO;
-using System.Reflection;
+using HappyIRCClientLibrary.Enums;
+using System.Collections.Generic;
 
-
-namespace HappyIRCClientLibrary.Config
+namespace HappyIRCClientLibrary.Models
 {
-    public class Config : IConfig
+    public interface IServerMessage
     {
-        private readonly ILoggerRepository logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-
-        public Config()
-        {
-            var configFile = new FileInfo("log4net.config");
-            XmlConfigurator.Configure(logRepository, configFile);
-        }
-
-        public ILog GetLogger(string name)
-        {
-            return LogManager.GetLogger(name);
-        }
+        string Channel { get; }
+        string Command { get; }
+        string Message { get; }
+        string Nick { get; }
+        List<string> Parameters { get; }
+        string Prefix { get; }
+        NumericResponse ResponseCode { get; }
+        string Trailing { get; }
+        CommandType Type { get; }
     }
 }

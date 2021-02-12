@@ -58,17 +58,17 @@ namespace IRCServerTestClient
             this.txtServerMessages.Multiline = true;
             this.txtServerMessages.Name = "txtServerMessages";
             this.txtServerMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtServerMessages.Size = new System.Drawing.Size(1384, 510);
+            this.txtServerMessages.Size = new System.Drawing.Size(1389, 510);
             this.txtServerMessages.TabIndex = 2;
             this.txtServerMessages.WordWrap = false;
             // 
             // txtParsedMessages
             // 
-            this.txtParsedMessages.Location = new System.Drawing.Point(17, 528);
+            this.txtParsedMessages.Location = new System.Drawing.Point(12, 528);
             this.txtParsedMessages.Multiline = true;
             this.txtParsedMessages.Name = "txtParsedMessages";
             this.txtParsedMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtParsedMessages.Size = new System.Drawing.Size(1384, 331);
+            this.txtParsedMessages.Size = new System.Drawing.Size(1394, 331);
             this.txtParsedMessages.TabIndex = 3;
             this.txtParsedMessages.WordWrap = false;
             // 
