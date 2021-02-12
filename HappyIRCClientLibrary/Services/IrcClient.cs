@@ -101,6 +101,7 @@ namespace HappyIRCClientLibrary.Services
             tcpClient.Server = Server;
             tcpClient.ConnectedCallback = onTcpConnected;
             tcpClient.ReceivedCallback = onTcpMessageReceived;
+            tcpClient.ClosedCallback = onTcpClosed;
 
             tcpClientTask = tcpClient.RunAsync();
 
@@ -226,6 +227,11 @@ namespace HappyIRCClientLibrary.Services
                 }
             }
             return;
+        }
+
+        private void onTcpClosed(ITcpClient client, bool remote)
+        {
+            Connected = false;
         }
 
         private void ThrowIfNotConnectedOrInitialized()

@@ -47,6 +47,8 @@ namespace IRCServerTestClient
         public Mode Mode { get; set; }
 
         private readonly IIrcClient client;
+        private bool inChannel = false;
+        private Channel currentChannel = null;
 
         public frmMain(IIrcClient client)
         {
@@ -69,10 +71,9 @@ namespace IRCServerTestClient
 
             Application.DoEvents();
 
+            client.ServerMessageReceived += MessageReceived;
             await client.Connect();
             frmCon.Close();
-
-            client.ServerMessageReceived += MessageReceived;
         }
 
         private async void frmMain_Load(object sender, EventArgs e)
@@ -88,15 +89,57 @@ namespace IRCServerTestClient
             }
             else
             {
+                if(!client.Connected)
+                {
+                    MessageBox.Show("DUDE YOU ARE NOT CONNECTED!");
+                }
                 ProccessCommand(txtSendToServer.Text);
             }
 
             txtSendToServer.Text = string.Empty;
         }
 
+        // Super dumb client with all the logic in the form...
+        // Don't do it like this
         private void ProccessCommand(string command)
         {
-            throw new NotImplementedException();
+            if(command.ToUpperInvariant().StartsWith("/PART"))
+            {
+                var message = string.Empty;
+                if (command.Contains(" "))
+                {
+                    message = command.Substring(command.IndexOf(" "));
+                }
+
+                currentChannel.Part(message);
+
+                inChannel = false;
+                return;
+            }
+
+            if (command.ToUpperInvariant().StartsWith("/JOIN"))
+            {
+                var channel = new Channel(client, command.Substring(6));
+                channel.Join();
+                currentChannel = channel;
+
+                return;
+            }
+
+            //TODO this doesn't disconnect, look into it after fixing logging
+            if (command.ToUpperInvariant().StartsWith("/QUIT"))
+            {
+                var message = string.Empty;
+                if(command.Contains(" "))
+                {
+                    message = command.Substring(command.IndexOf(" "));
+                }
+
+                client.SendMessageToServer($"QUIT {message}");
+                return;
+            }
+
+            currentChannel.SendMessage(command);
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
