@@ -27,15 +27,19 @@ namespace HappyIRCClientLibrary.Models
 {
     public class Server : IServer
     {
+        #region Properties
         public string ServerAddress { get; private set; }
         public int Port { get; private set; }
         public string Password { get; set; }
+        #endregion Properties
 
+        #region Constructors
         public Server(string serverAddress, int port, string password = "")
         {
             ServerAddress = serverAddress;
             Port = port;
             Password = password; // RFC 2812 3.1.1 Password message
         }
+        #endregion Constructors
     }
 }
