@@ -23,7 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Services
@@ -33,6 +35,8 @@ namespace HappyIRCClientLibrary.Services
         bool Connected { get; }
         Server Server { get; }
         User User { get; }
+
+        event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived;
 
         void Initialize(Server server, User user);
         Task Connect();
