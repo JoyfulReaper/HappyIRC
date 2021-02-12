@@ -103,6 +103,11 @@ namespace HappyIRCClientLibrary.Services
             tcpClient.ReceivedCallback = onTcpMessageReceived;
 
             tcpClientTask = tcpClient.RunAsync();
+
+            while(!Connected)
+            {
+                await Task.Delay(100);
+            }
         }
 
         /// <summary>
@@ -258,21 +263,6 @@ namespace HappyIRCClientLibrary.Services
 
         ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
 
-        ///// <summary>
-        ///// When the TcpListen thread recevices a message it is sent here.
-        ///// </summary>
-        ///// <param name="message">The message that was received from the server</param>
-        //internal void ReceiveMessageFromServer(ServerMessage message)
-        //{
-        //    if(message != null)
-        //    {
-        //        OnServerMessageReceived(new ServerMessageReceivedEventArgs(message));
-        //    }
-        //    else
-        //    {
-        //        log.LogWarning("ReceiveMessageFromServer(): Recevied null message");
-        //    }
-        //}
 
         ///// <summary>
         ///// Join a channel
