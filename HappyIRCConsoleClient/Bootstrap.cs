@@ -11,9 +11,9 @@ namespace HappyIRCConsoleClient
     static class Bootstrap
     {
         /// <summary>
-        /// 
+        /// Initialize Configuration and Dependency Injection
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">Command line arguments</param>
         /// <returns></returns>
         public static ServiceProvider Initialize(string[] args)
         {

@@ -66,13 +66,18 @@ namespace HappyIRCConsoleClient
                 ircClient.Initialize(server, user);
                 await ircClient.Connect();
 
-                //Channel win95 = new Channel(ircClient, "#Windows95");
-                //win95.SendMessage("Hello IRC world!");
+                Channel win95 = new Channel(ircClient, "#Windows95");
+                win95.Join();
+                win95.SendMessage("Hello IRC world!");
+
+                await Task.Delay(35000);
+                win95.Part("Goodbye IRC world!");
+
                 //while (true)
                 //{
                 //    await Task.Delay(120000);
                 //}
-                await Task.Delay(30000);
+                await Task.Delay(15000);
                 await ircClient.Disconnect();
             }
             else
