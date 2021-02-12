@@ -23,9 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
+using HappyIRCClientLibrary.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,9 +46,9 @@ namespace IRCServerTestClient
         public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
         public Mode Mode { get; set; }
 
-        private readonly IrcClient client;
+        private readonly IIrcClient client;
 
-        public frmMain(IrcClient client)
+        public frmMain(IIrcClient client)
         {
             InitializeComponent();
             this.client = client;

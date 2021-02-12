@@ -23,12 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary;
+using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using System.Windows.Forms;
 
 namespace IRCServerTestClient
@@ -39,17 +37,15 @@ namespace IRCServerTestClient
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
-            var serviceProvider = ContainerBuilder.BuildContainer();
-
-            IIrcClient iclient = serviceProvider.GetRequiredService<IIrcClient>();
-            IrcClient client = iclient as IrcClient;
+            var serviceProvider = Bootstrap.Initialize(args);
+            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain(client));
+            Application.Run(new frmMain(ircClient));
         }
     }
 }
