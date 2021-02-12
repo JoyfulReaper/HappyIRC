@@ -43,6 +43,7 @@ namespace HappyIRCClientLibrary.Models
     /// </summary>
     public class Channel : IChannel
     {
+        #region Properties
         public string Name
         {
             get { return name; }
@@ -60,7 +61,9 @@ namespace HappyIRCClientLibrary.Models
         }
 
         public string Key { get; set; }
+        #endregion Properties
 
+        #region Private Data
         private readonly IIrcClient client;
         private static readonly char[] validStartingChars = { '&', '#', '+', '!' };
 
@@ -68,22 +71,25 @@ namespace HappyIRCClientLibrary.Models
         /// Name of the channel
         /// </summary>
         private string name;
+        #endregion Private Data
 
-
+        #region Constructors
         public Channel(IIrcClient client, string name, string key = "")
         {
             this.client = client;
             this.Name = name;
             this.Key = key;
         }
+        #endregion Constructors
 
+        #region Public Methods
         /// <summary>
         /// Send a message to this channel
         /// </summary>
         /// <param name="message">The message to send</param>
         public void SendMessage(string message)
         {
-            client.SendMessageToServer("\r\n");
+            client.SendMessageToServer($"PRIVMSG {Name} :{message}\r\n");
         }
 
         /// <summary>
@@ -97,6 +103,7 @@ namespace HappyIRCClientLibrary.Models
         }
 
         /// <summary>
+        /// Join the Channel
         /// RFC 2812 3.2.1 Join message
         /// http://www.geekshed.net/2012/03/using-channel-keys/ Channel Keys
         /// </summary>
@@ -122,6 +129,40 @@ namespace HappyIRCClientLibrary.Models
             joinBuilder.Append("\r\n");
 
             client.SendMessageToServer(joinBuilder.ToString());
+
+            return true;
+        }
+
+        /// <summary>
+        /// Part the channel
+        /// </summary>
+        /// <returns></returns>
+        public bool Part()
+        {
+            return Part(string.Empty);
+        }
+
+        /// <summary>
+        /// Part the channel
+        /// </summary>
+        /// <param name="message">The parting message</param>
+        /// <returns></returns>
+        public bool Part(string message)
+        {
+            /* Possible replies
+            TODO: Error checking
+            ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
+            ERR_NOTONCHANNEL 
+            */
+
+            StringBuilder partBuilder = new StringBuilder($"PART {name}");
+            if(!string.IsNullOrEmpty(message))
+            {
+                partBuilder.Append($" :{message}");
+            }
+            partBuilder.Append("\r\n");
+
+            client.SendMessageToServer(partBuilder.ToString());
 
             return true;
         }
@@ -156,5 +197,6 @@ namespace HappyIRCClientLibrary.Models
 
             return false;
         }
+        #endregion Public Methods
     }
 }
