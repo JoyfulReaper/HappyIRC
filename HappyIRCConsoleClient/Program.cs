@@ -48,13 +48,30 @@ namespace HappyIRCConsoleClient
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Build())
                 .Enrich.FromLogContext()
-                .WriteTo.Console()
+                //.WriteTo.Console()
                 .CreateLogger();
 
             Log.Logger.Information("HappyIRCConsoleClient Starting");
 
             //var cts = new CancellationTokenSource();
 
+            try
+            {
+                await Run(args);
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "An unhandeled exception occured.");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+
+        }
+
+        private static async Task Run(string[] args)
+        {
             var serviceProvider = Bootstrap.Initialize(args);
             var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 

@@ -32,6 +32,7 @@ SOFTWARE.
  */
 
 using HappyIRCClientLibrary.Services;
+using Serilog;
 using System;
 using System.Text;
 
@@ -89,6 +90,7 @@ namespace HappyIRCClientLibrary.Models
         /// <param name="message">The message to send</param>
         public void SendMessage(string message)
         {
+            Log.Debug("Sending {message} to {channel}", message, Name);
             client.SendMessageToServer($"PRIVMSG {Name} :{message}\r\n");
         }
 

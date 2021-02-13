@@ -24,9 +24,11 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
-
+using System.IO;
 using System.Windows.Forms;
 
 namespace IRCServerTestClient
@@ -39,6 +41,17 @@ namespace IRCServerTestClient
         [STAThread]
         static void Main(string[] args)
         {
+            var builder = new ConfigurationBuilder();
+            BuildConfig(builder);
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Build())
+                .Enrich.FromLogContext()
+                //.WriteTo.Console()
+                .CreateLogger();
+
+            Log.Logger.Information("HappyIRCConsoleClient Starting");
+
             var serviceProvider = Bootstrap.Initialize(args);
             var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
@@ -46,6 +59,14 @@ namespace IRCServerTestClient
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMain(ircClient));
+        }
+
+        private static void BuildConfig(IConfigurationBuilder builder)
+        {
+            builder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+                .AddEnvironmentVariables();
         }
     }
 }
