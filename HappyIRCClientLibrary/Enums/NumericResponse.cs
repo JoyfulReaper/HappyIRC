@@ -66,7 +66,7 @@ namespace HappyIRCClientLibrary.Enums
         RPL_ADMINEMAIL = 259,
         RPL_TRACELOG = 261,
         RPL_TRACEEND = 262,
-        RPL_TRYAGAIN = 263,
+        RPL_TRYAGAIN = 263, //"<command> :Please wait a while and try again."
 
         RPL_AWAY = 301,
         RPL_USERHOST = 302, // ":*1<reply> *( " " <reply> )"
@@ -118,22 +118,84 @@ namespace HappyIRCClientLibrary.Enums
         RPL_NOUSERS = 395, // ":Nobody logged in"
 
         ERR_NOSUCHNICK = 401, // "<nickname> :No such nick/channel"
+        ERR_NOSUCHSERVER = 402,
         ERR_NOSUCHCHANNEL = 403, // "<channel name> :No such channel"
         ERR_CANNOTSENDTOCHAN = 404, // "<channel name> :Cannot send to channel"
         ERR_TOOMANYCHANNELS = 405, // "<channel name> :You have joined too many channels"
+        ERR_WASNOSUCHNICK = 406,
         ERR_TOOMANYTARGETS = 407, // "<target> :<error code> recipients. <abort message>"
+        ERR_NOSUCHSERVICE = 408,
+        ERR_NOORGIN = 409,
         ERR_NORECIPIENT = 411, // ":No recipient given (<command>)"
         ERR_NOTEXTTOSEND = 412, // ":No text to send"
         ERR_NOTOPLEVEL = 413, // "<mask> :No toplevel domain specified"
         ERR_WILDTOPLEVEL = 414, // "<mask> :Wildcard in toplevel domain"
+        ERR_BADMASK = 415,
+        ERR_UNKNOWNCOMMAND = 421,
+        ERR_NOMOTD = 422,
+        ERR_NOADMININFO = 423,
+        ERR_FILEERROR = 424,
+        ERR_NONICKNAMEGIVEN = 431,
+        ERR_ERRONEUSNICKNAME = 432,
         ERR_NICKNAMEINUSE = 433, // "<nick> :Nickname is already in use"
+        ERR_NICKCOLLISION = 436,
         ERR_UNAVAILRESOURCE = 437, // "<nick/channel> :Nick/channel is temporarily unavailable"
-        ERR_NOTONCHANNEL = 442, // "<channel> :You're not on that channel"
+        ERR_USERNOTINCHANNEL = 441,
+        ERR_NOTONCHANNEL = 442, // "<channel> :You're not on that channel" 
+        ERR_USERONCHANNEL = 443,
+        ERR_NOLOGIN = 444,
+        ERR_SUMMONDISABLED = 445,
+        ERR_USERDISABLED = 446,
+        ERR_NOTREGISTERED = 451,
         ERR_NEEDMOREPARAMS = 461, // "<command> :Not enough parameters"
-        ERR_BANNEDFROMCHAN = 474, // "<channel> :Cannot join channel (+b)"
-        ERR_INVITEONLYCHAN = 473, // "<channel> :Cannot join channel (+i)"
-        ERR_BADCHANNELKEY = 475,  // "<channel> :Cannot join channel (+k)"
+        ERR_ALREADYREGISTERED = 462,
+        ERR_NOPERMFORHOST = 463,
+        ERR_PASSWDMISMATCH = 464,
+        ERR_YOUREBANNEDCREEP = 465, // ":You are banned from this server" Returned after an attempt to connect and register yourself with a server which has been setup to explicitly deny connections to you.
+        ERR_YOUWILLBEBANNED = 466, // Sent by a server to a user to inform that access to the server will soon be denied.
+        ERR_KEYSET = 467,
         ERR_CHANNELISFULL = 471, // "<channel> :Cannot join channel (+l)"
+        ERR_UNKNOWNMODE = 472,
+        ERR_INVITEONLYCHAN = 473, // "<channel> :Cannot join channel (+i)"
+        ERR_BANNEDFROMCHAN = 474, // "<channel> :Cannot join channel (+b)"
+        ERR_BADCHANNELKEY = 475,  // "<channel> :Cannot join channel (+k)"
         ERR_BADCHANMASK = 476,   // "<channel> :Bad Channel Mask"
+        ERR_NOCHANMODES = 477,
+        ERR_BANLISTFULL = 478,
+        ERR_NOPRIVILEGES = 481,
+        ERR_CHANOPPRIVSNEEDED = 482,
+        ERR_CANTKILLSERVER = 483,
+        ERR_RESTRICTED = 484,
+        ERR_UNIQOPPRIVSNEEDED = 485,
+        ERR_NOOPERHOST = 491,
+
+        ERR_UMODEUNKNOWNFLAG = 501,
+        ERR_USERSDONTMATCH = 502,
+
+        // Reserved Numerics
+        RPL_SERVICEINFO = 231,
+        RPL_ENDOFSERVICES = 232,
+        RPL_SERVICE = 233,
+        RPL_NONE = 300,
+        RPL_WHOISCHANOP = 316,
+        RPL_KILLDONE = 361,
+        RPL_CLOSING = 362,
+        RPL_CLOSEEND = 363,
+        RPL_INFOSTART = 373,
+        RPL_MYPORTIS = 384,
+        RPL_STATSCLINE = 213,
+        RPL_STATSILINE = 215,
+        RPL_STATSQLINE = 217,
+        RPL_STATSVLINE = 240,
+        RPL_STATSHLINE = 244,
+        RPL_STATSPING = 246,
+        RPL_STATSDLINE = 250,
+        RPL_STATSNLINE = 214,
+        RPL_STATSKLINE = 216,
+        RPL_STATSYLINE = 218,
+        RPL_STATSLLINE = 241,
+        RPL_STATSSLINE = 244,
+        RPL_STATSBLINE = 247,
+        ERR_NOSERVICEHOST = 492
     };
 }
