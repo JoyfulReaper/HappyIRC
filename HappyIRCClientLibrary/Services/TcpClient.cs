@@ -49,14 +49,16 @@ namespace HappyIRCClientLibrary.Services
         private NetworkStream stream;
         private TaskCompletionSource<bool> closedTcs = new TaskCompletionSource<bool>();
 
-        public TcpClient(ILogger<TcpClient> log)
+        public TcpClient(ILogger<TcpClient> log,
+            IServer server)
         {
             closedTcs.SetResult(true);
             this.log = log;
+            this.Server = server;
         }
 
         public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
-        public Server Server { get; set; }
+        public IServer Server { get; private set; }
         public bool IsConnected => tcpClient.Client.Connected;
 
         /// <summary>

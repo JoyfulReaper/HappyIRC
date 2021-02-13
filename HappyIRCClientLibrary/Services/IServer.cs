@@ -23,23 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Models;
-
 namespace HappyIRCClientLibrary.Services
 {
-    internal static class IIrcClientExtensions
+    public interface IServer
     {
-        public static void ReceiveMessageFromServer(this IIrcClient iface, ServerMessage message)
-        {
-            iface.ReceiveMessageFromServer(message);
-        }
-        public static void AddChannel (this IIrcClient iface, ServerMessage message)
-        {
-            iface.AddChannel(message);
-        }
-        public static void RemoveChannel (this IIrcClient iface, ServerMessage message)
-        {
-            iface.RemoveChannel(message);
-        }
+        string Password { get; set; }
+        int Port { get; }
+        string ServerAddress { get; }
     }
 }

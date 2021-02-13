@@ -138,7 +138,7 @@ namespace HappyIRCClientLibrary.Parsers
 
             if (command == "PRIVMSG")
             {
-                type = CommandType.PrivateMessage;
+                type = CommandType.Message;
             }
 
             if (int.TryParse(command, out int reply))

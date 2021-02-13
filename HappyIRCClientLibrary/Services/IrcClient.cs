@@ -44,11 +44,10 @@ namespace HappyIRCClientLibrary.Services
     public class IrcClient : IIrcClient, IDisposable
     {
         #region Properties
-        public Server Server { get; private set; } // The IRC server to connect to
-        public User User { get; private set; } // The user to connect as
+        public IServer Server { get; private set; } // The IRC server to connect to
+        public IUser User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
-        public bool Initialized { get; private set; } = false; // True if Initialized()
-        public List<Channel> Channels { get; private set; } = new List<Channel>();
+        //public bool Initialized { get; private set; } = false; // True if Initialized()
         #endregion Properties
 
         #region Events
@@ -61,6 +60,8 @@ namespace HappyIRCClientLibrary.Services
         private readonly ITcpClient tcpClient;
         private readonly IMessageParser messageParser;
         private readonly IConfiguration configuration;
+        private readonly IMessageProccessor messageProccessor;
+        private readonly IChannelService channelService;
         private Task tcpClientTask;
         #endregion Private Data
 
@@ -71,27 +72,35 @@ namespace HappyIRCClientLibrary.Services
         public IrcClient(ILogger<IIrcClient> log,
             ITcpClient tcpClient,
             IMessageParser messageParser,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMessageProccessor messageProccessor,
+            IChannelService channelService,
+            IUser user,
+            IServer server)
         {
             this.log = log;
             this.tcpClient = tcpClient;
             this.messageParser = messageParser;
             this.configuration = configuration;
+            this.messageProccessor = messageProccessor;
+            this.channelService = channelService;
+            this.User = user;
+            this.Server = server;
         }
         #endregion Constructors
 
         #region Public Methods
-        /// <summary>
-        /// Initialize the client before connecting
-        /// </summary>
-        /// <param name="server">The server to connect to</param>
-        /// <param name="user">The user to connect as</param>
-        public void Initialize(Server server, User user)
-        {
-            Server = server;
-            User = user;
-            Initialized = true;
-        }
+        ///// <summary>
+        ///// Initialize the client before connecting
+        ///// </summary>
+        ///// <param name="server">The server to connect to</param>
+        ///// <param name="user">The user to connect as</param>
+        //public void Initialize(Server server, User user)
+        //{
+        //    Server = server;
+        //    User = user;
+        //    Initialized = true;
+        //}
 
         
         /// <summary>
@@ -100,7 +109,6 @@ namespace HappyIRCClientLibrary.Services
         /// </summary>
         public async Task Connect()
         {
-            tcpClient.Server = Server;
             tcpClient.ConnectedCallback = onTcpConnected;
             tcpClient.ReceivedCallback = onTcpMessageReceived;
             tcpClient.ClosedCallback = onTcpClosed;
@@ -158,6 +166,16 @@ namespace HappyIRCClientLibrary.Services
 
             await tcpClient.Send(message);
         }
+
+        public void AddChannel(Channel channel)
+        {
+            channelService.AddChannel(channel);
+        }
+
+        public void RemoveChannel(Channel channel)
+        {
+            channelService.RemoveChannel(channel);
+        }
         #endregion Public Methods
 
         #region Private Methods
@@ -197,8 +215,14 @@ namespace HappyIRCClientLibrary.Services
                 }
 
                 OnServerMessageReceived(new ServerMessageReceivedEventArgs(parsedMessage));
+                ProccessMessage(parsedMessage);
             }
             return;
+        }
+
+        private void ProccessMessage(ServerMessage message)
+        {
+            messageProccessor.ProccessMessage(message);
         }
 
         private async Task onTcpConnected(ITcpClient client)
@@ -238,11 +262,11 @@ namespace HappyIRCClientLibrary.Services
 
         private void ThrowIfNotConnectedOrInitialized()
         {
-            if (!Initialized)
-            {
-                log.LogError("Client is not initialized");
-                throw new InvalidOperationException("The Client is not initialized.");
-            }
+            //if (!Initialized)
+            //{
+            //    log.LogError("Client is not initialized");
+            //    throw new InvalidOperationException("The Client is not initialized.");
+            //}
             if (!Connected)
             {
                 log.LogError("Client is not connected to a server");
@@ -270,29 +294,6 @@ namespace HappyIRCClientLibrary.Services
         #endregion Protected Methods
 
         #region Internal Methods
-        public void AddChannel(Channel channel)
-        {
-            ThrowIfNotConnectedOrInitialized();
-
-            if(channel == null)
-            {
-                throw new ArgumentException("Channel cannot be null", nameof(channel));
-            }
-
-            Channels.Add(channel);
-        }
-
-        public void RemoveChannel(Channel channel)
-        {
-            ThrowIfNotConnectedOrInitialized();
-
-            if (channel == null)
-            {
-                throw new ArgumentException("Channel cannot be null", nameof(channel));
-            }
-
-            Channels.Remove(channel);
-        }
         #endregion Internal Methods
     }
 }

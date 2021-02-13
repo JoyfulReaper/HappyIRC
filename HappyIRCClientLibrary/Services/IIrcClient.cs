@@ -26,6 +26,7 @@ SOFTWARE.
 using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Services
@@ -33,12 +34,12 @@ namespace HappyIRCClientLibrary.Services
     public interface IIrcClient
     {
         bool Connected { get; }
-        Server Server { get; }
-        User User { get; }
+        IServer Server { get; }
+        IUser User { get; }
 
         event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived;
 
-        void Initialize(Server server, User user);
+        //void Initialize(Server server, User user);
         Task Connect();
         Task Disconnect();
         Task SendMessageToServer(string message);

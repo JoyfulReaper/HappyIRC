@@ -26,7 +26,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 
-namespace HappyIRCClientLibrary.Models
+namespace HappyIRCClientLibrary.Services
 {
     public class User : IUser
     {
