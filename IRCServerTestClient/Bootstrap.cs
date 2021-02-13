@@ -31,6 +31,7 @@ namespace IRCServerTestClient
                     //.AddOptions() https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
                     .AddTransient<ITcpClient, TcpClient>()
                     .AddTransient<IMessageParser, MessageParser>()
+                    .AddTransient<IMessageProccessor, MessageProccessor>()
                     .AddTransient<IIrcClient, IrcClient>()
                     .BuildServiceProvider();
 

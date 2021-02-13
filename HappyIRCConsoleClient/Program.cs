@@ -74,15 +74,15 @@ namespace HappyIRCConsoleClient
 
         private static async Task Run(string[] args)
         {
-            var serviceProvider = Bootstrap.Initialize(args);
+            Server server = new Server("irc.quakenet.org", 6667);
+            User user = new User("HappyIRC", "The Happiest IRC");
+
+            var serviceProvider = Bootstrap.Initialize(args, server, user);
             var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
             if (ircClient != null)
             {
-                Server server = new Server("irc.quakenet.org", 6667);
-                User user = new User("HappyIRC", "The Happiest IRC");
-
-                ircClient.Initialize(server, user);
+                //ircClient.Initialize(server, user);
                 await ircClient.Connect();
 
                 Channel win95 = new Channel(ircClient, "#Windows95");

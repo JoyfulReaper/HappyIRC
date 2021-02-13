@@ -15,7 +15,7 @@ namespace HappyIRCConsoleClient
         /// </summary>
         /// <param name="args">Command line arguments</param>
         /// <returns></returns>
-        public static ServiceProvider Initialize(string[] args)
+        public static ServiceProvider Initialize(string[] args, IServer server, IUser user)
         {
             IConfigurationBuilder configBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -28,10 +28,14 @@ namespace HappyIRCConsoleClient
             var serviceProvider = serviceCollection
                     .AddLogging(configure => configure.AddSerilog())
                     .AddSingleton<IConfiguration>(config)
+                    .AddTransient(x => server)
+                    .AddTransient(x => user)
                     //.AddOptions() https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
                     .AddTransient<ITcpClient, TcpClient>()
                     .AddTransient<IMessageParser, MessageParser>()
                     .AddTransient<IIrcClient, IrcClient>()
+                    .AddTransient<IMessageProccessor, MessageProccessor>()
+                    .AddTransient<IChannelService, ChannelService>()
                     .BuildServiceProvider();
 
             return serviceProvider;
