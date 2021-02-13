@@ -33,6 +33,7 @@ namespace HappyIRCClientLibrary.Models
         #region Properties
         /// <summary>
         /// User's Nick
+        /// RFC2812 limits the length of a nickname to (9) characters!
         /// </summary>
         public string NickName { get; set; }
 

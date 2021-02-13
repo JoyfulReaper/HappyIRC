@@ -86,6 +86,7 @@ namespace IRCServerTestClient
             if (Mode == Mode.Raw)
             {
                 client.SendMessageToServer(txtSendToServer.Text + "\r\n");
+                txtServerMessages.AppendText($"YOU SENT: {txtSendToServer.Text}{Environment.NewLine}");
             }
             else
             {

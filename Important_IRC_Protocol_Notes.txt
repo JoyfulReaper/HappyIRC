@@ -1,7 +1,37 @@
+                       1--\
+                           A        D---4
+                       2--/ \      /
+                             B----C
+                            /      \
+                           3        E
+
+   Servers: A, B, C, D, E         Clients: 1, 2, 3, 4
+
+                    [ Fig. 1. Sample small IRC network ]
+
+RFCs:
+https://tools.ietf.org/html/rfc2810 (Internet Relay Chat: Architecture)
+
 Important Concepts:
    Operators: Can disconnect and reconnect servers. 
    Remove any user by forced disconnection
    
+IRC Concepts:
+  One-to-One Communication: servers send message in one direction along the spanning tree
+  in the shortest path between the points.
+  One-To-Many: conversation only sent to servers supporting users on the given channel
+  
+   
+Client:
+  Anything conneting to the server that is not another server.
+  User and Service Clients
+
+Architecture:
+  IRC network is a group of servers connected to eachother
+  IRC servers form a spanning tree which each server acts as a central
+  node for the rest of the network it sees.
+  IRC protocl does not support two clients directly communicating. 
+  eveything is relayed by the servers
    
 Important considerations:
    IRC messages are always lines of characters terminated with a CR-LF

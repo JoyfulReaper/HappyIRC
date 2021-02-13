@@ -62,10 +62,12 @@ namespace HappyIRCConsoleClient
             catch (Exception ex)
             {
                 Log.Fatal(ex, "An unhandeled exception occured.");
+                Console.WriteLine("An unhandeled exception occured." );
             }
             finally
             {
                 Log.CloseAndFlush();
+                Environment.Exit(-1);
             }
 
         }
@@ -90,10 +92,10 @@ namespace HappyIRCConsoleClient
                 await Task.Delay(35000);
                 win95.Part("Goodbye IRC world!");
 
-                //while (true)
-                //{
-                //    await Task.Delay(120000);
-                //}
+                while (true)
+                {
+                    await Task.Delay(120000);
+                }
                 await Task.Delay(15000);
                 await ircClient.Disconnect();
             }

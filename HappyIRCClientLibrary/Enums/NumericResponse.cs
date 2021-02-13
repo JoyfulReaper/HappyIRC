@@ -88,6 +88,7 @@ namespace HappyIRCClientLibrary.Enums
         RPL_UNIQOPIS = 325, // "<channel> <nickname>"
         RPL_NOTOPIC = 331, // "<channel> :No topic is set"
         RPL_TOPIC = 332, // "<channel> :<topic>"
+        RPL_TOPICWHOTIME = 333,
         RPL_INVITING = 341, // "<channel> <nick>"
         RPL_SUMMONING = 342, // "<user> :Summoning user to IRC"
         RPL_INVITELIST = 346, // "<channel> <invitemask>"
