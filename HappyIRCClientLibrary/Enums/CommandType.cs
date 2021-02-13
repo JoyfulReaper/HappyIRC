@@ -31,6 +31,6 @@ namespace HappyIRCClientLibrary.Enums
     /// </summary>
     public enum CommandType
     {
-        Unknown, ChannelMessage, PrivateMessage, NumericReply,
+        Unknown, Message, NumericReply
     }
 }
