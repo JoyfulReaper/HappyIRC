@@ -99,7 +99,7 @@ namespace HappyIRCClientLibrary.Models
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ReceiveMessage(object sender, EventArgs e)
+        public void ReceiveMessage(ServerMessage message)
         {
             throw new NotImplementedException();
         }

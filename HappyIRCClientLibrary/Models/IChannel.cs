@@ -33,7 +33,7 @@ namespace HappyIRCClientLibrary.Models
         string Name { get; set; }
 
         bool Join();
-        void ReceiveMessage(object sender, EventArgs e);
+        void ReceiveMessage(ServerMessage message);
         void SendMessage(string message);
     }
 }
