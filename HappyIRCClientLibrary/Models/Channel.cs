@@ -131,6 +131,7 @@ namespace HappyIRCClientLibrary.Models
             joinBuilder.Append("\r\n");
 
             client.SendMessageToServer(joinBuilder.ToString());
+            client.AddChannel(this);
 
             return true;
         }
@@ -165,6 +166,7 @@ namespace HappyIRCClientLibrary.Models
             partBuilder.Append("\r\n");
 
             client.SendMessageToServer(partBuilder.ToString());
+            client.RemoveChannel(this);
 
             return true;
         }

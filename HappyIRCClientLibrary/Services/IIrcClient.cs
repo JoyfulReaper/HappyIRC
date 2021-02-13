@@ -42,5 +42,7 @@ namespace HappyIRCClientLibrary.Services
         Task Connect();
         Task Disconnect();
         Task SendMessageToServer(string message);
+        public void AddChannel(Channel channel);
+        public void RemoveChannel(Channel channel);
     }
 }

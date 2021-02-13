@@ -30,10 +30,11 @@ using System.Threading.Tasks;
 using System;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Events;
-using Microsoft.Extensions.Logging;
 using HappyIRCClientLibrary.Parsers;
 using HappyIRCClientLibrary.Enums;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -47,6 +48,7 @@ namespace HappyIRCClientLibrary.Services
         public User User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
         public bool Initialized { get; private set; } = false; // True if Initialized()
+        public List<Channel> Channels { get; private set; } = new List<Channel>();
         #endregion Properties
 
         #region Events
@@ -267,75 +269,30 @@ namespace HappyIRCClientLibrary.Services
         }
         #endregion Protected Methods
 
-        ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
+        #region Internal Methods
+        public void AddChannel(Channel channel)
+        {
+            ThrowIfNotConnectedOrInitialized();
 
+            if(channel == null)
+            {
+                throw new ArgumentException("Channel cannot be null", nameof(channel));
+            }
 
-        ///// <summary>
-        ///// Join a channel
-        ///// </summary>
-        ///// <param name="channel"></param>
-        //public void Join(string channel)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
+            Channels.Add(channel);
+        }
 
-        //    ThrowIfNotConnectedOrInitialized();
+        public void RemoveChannel(Channel channel)
+        {
+            ThrowIfNotConnectedOrInitialized();
 
-        //    log.Info($"Attemping to join channel: {channel}");
-        //    SendMessageToServer($"JOIN {channel}\r\n");
-        //    Channel chan = new Channel() { Name = channel };
+            if (channel == null)
+            {
+                throw new ArgumentException("Channel cannot be null", nameof(channel));
+            }
 
-        //    Channels.Add(chan);
-
-
-        //    /*Possible replies:
-        //    ERR_NEEDMOREPARAMS ERR_BANNEDFROMCHAN
-        //   ERR_INVITEONLYCHAN ERR_BADCHANNELKEY
-        //   ERR_CHANNELISFULL ERR_BADCHANMASK
-        //   ERR_NOSUCHCHANNEL ERR_TOOMANYCHANNELS
-        //   ERR_TOOMANYTARGETS ERR_UNAVAILRESOURCE
-        //   RPL_TOPIC */
-        //}
-
-        ///// <summary>
-        ///// Part (leave) a channel
-        ///// </summary>
-        ///// <param name="channel">The channel to part</param>
-        //public void Part(string channel)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-
-        //    ThrowIfNotConnectedOrInitialized();
-
-        //    log.Info($"Attemping to part channel: {channel}");
-        //    SendMessageToServer($"PART {channel}\r\n");
-
-        //    Channels.Remove(Channels.Where(x => x.Name == channel).FirstOrDefault());
-
-        //    /* Possible replies
-        //   ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
-        //   ERR_NOTONCHANNEL */
-        //}
-
-        ///// <summary>
-        ///// Send a chat message
-        ///// </summary>
-        ///// <param name="target">The nick or channel to send the message to</param>
-        ///// <param name="message">The message to send</param>
-        //public void SendMessage(string target, string message)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-        //    ThrowIfNotConnectedOrInitialized();
-
-        //    log.Debug($"Attempting to message: {target} Message: {message}");
-        //    SendMessageToServer($"PRIVMSG {target} :{message}\r\n");
-
-        //    /*
-        //     Possible Replies
-        //   ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
-        //   ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
-        //   ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
-        //   ERR_NOSUCHNICK
-        //   RPL_AWAY */
-        //}
+            Channels.Remove(channel);
+        }
+        #endregion Internal Methods
     }
 }

@@ -24,7 +24,6 @@ SOFTWARE.
 */
 
 using HappyIRCClientLibrary.Models;
-using System;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -33,6 +32,14 @@ namespace HappyIRCClientLibrary.Services
         public static void ReceiveMessageFromServer(this IIrcClient iface, ServerMessage message)
         {
             iface.ReceiveMessageFromServer(message);
+        }
+        public static void AddChannel (this IIrcClient iface, ServerMessage message)
+        {
+            iface.AddChannel(message);
+        }
+        public static void RemoveChannel (this IIrcClient iface, ServerMessage message)
+        {
+            iface.RemoveChannel(message);
         }
     }
 }
