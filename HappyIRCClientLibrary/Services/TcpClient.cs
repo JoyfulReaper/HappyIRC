@@ -29,8 +29,6 @@ SOFTWARE.
 // Copying and distribution of this file, with or without modification, are permitted provided the
 // copyright notice and this notice are preserved. This file is offered as-is, without any warranty.
 
-
-using HappyIRCClientLibrary.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -77,13 +75,13 @@ namespace HappyIRCClientLibrary.Services
         /// communication logic to execute when the connection was established. The connection will
         /// not be closed before this method completes.
         /// </summary>
-        public Func<ITcpClient, Task> ConnectedCallback { get; set; }
+        public event Func<ITcpClient, Task> ConnectedCallback;
 
         /// <summary>
         /// Called when the connection was closed. The parameter specifies whether the connection
         /// was closed by the remote host.
         /// </summary>
-        public Action<ITcpClient, bool> ClosedCallback { get; set; }
+        public event Action<ITcpClient, bool> ClosedCallback;
 
         /// <summary>
         /// Called when data was received from the remote host. The parameter specifies the number
@@ -91,14 +89,12 @@ namespace HappyIRCClientLibrary.Services
         /// execute every time data was received. New data will not be received before this method
         /// completes.
         /// </summary>
-        public Func<ITcpClient, int, Task> ReceivedCallback { get; set; }
+        public event Func<ITcpClient, int, Task> ReceivedCallback;
 
         public Queue<string> MessageQueue { get; set; } = new Queue<string>();
 
         public async Task RunAsync()
         {
-            bool isConnected = false;
-
             // Could add reconnection logic here
             //do
             //{
@@ -248,13 +244,13 @@ namespace HappyIRCClientLibrary.Services
         /// </summary>
         /// <param name="count">The number of messages added to the queue</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        private Task OnReceivedAsync(int count)
+        private async Task OnReceivedAsync(int count)
         {
             if (ReceivedCallback != null)
             {
-                return ReceivedCallback(this, count);
+                await ReceivedCallback(this, count);
             }
-            return Task.CompletedTask;
+            //return Task.CompletedTask;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using HappyIRCClientLibrary.Parsers;
+﻿using HappyIRCClientLibrary;
 using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,14 +28,7 @@ namespace HappyIRCConsoleClient
             var serviceProvider = serviceCollection
                     .AddLogging(configure => configure.AddSerilog())
                     .AddSingleton<IConfiguration>(config)
-                    .AddTransient(x => server)
-                    .AddTransient(x => user)
-                    //.AddOptions() https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
-                    .AddTransient<ITcpClient, TcpClient>()
-                    .AddTransient<IMessageParser, MessageParser>()
-                    .AddTransient<IIrcClient, IrcClient>()
-                    .AddTransient<IMessageProccessor, MessageProccessor>()
-                    .AddTransient<IChannelService, ChannelService>()
+                    .AddHappyIrcClient(server, user)
                     .BuildServiceProvider();
 
             return serviceProvider;

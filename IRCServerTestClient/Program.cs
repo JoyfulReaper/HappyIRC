@@ -52,13 +52,10 @@ namespace IRCServerTestClient
 
             Log.Logger.Information("HappyIRCConsoleClient Starting");
 
-            var serviceProvider = Bootstrap.Initialize(args);
-            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
-
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain(ircClient));
+            Application.Run(new frmMain());
         }
 
         private static void BuildConfig(IConfigurationBuilder builder)

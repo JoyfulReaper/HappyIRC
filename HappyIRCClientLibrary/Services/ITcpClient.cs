@@ -33,14 +33,14 @@ namespace HappyIRCClientLibrary.Services
 {
     public interface ITcpClient
     {
-        Action<ITcpClient, bool> ClosedCallback { get; set; }
+        event Action<ITcpClient, bool> ClosedCallback;
         Task ClosedTask { get; }
-        Func<ITcpClient, Task> ConnectedCallback { get; set; }
+        event Func<ITcpClient, Task> ConnectedCallback;
         TimeSpan ConnectTimeout { get; set; }
         bool IsClosing { get; }
         bool IsConnected { get; }
         Queue<string> MessageQueue { get; set; }
-        Func<ITcpClient, int, Task> ReceivedCallback { get; set; }
+        event Func<ITcpClient, int, Task> ReceivedCallback;
         IServer Server { get; }
 
         void Disconnect();

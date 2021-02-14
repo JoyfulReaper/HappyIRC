@@ -34,7 +34,6 @@ using HappyIRCClientLibrary.Parsers;
 using HappyIRCClientLibrary.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
 
 namespace HappyIRCClientLibrary.Services
 {
@@ -47,11 +46,12 @@ namespace HappyIRCClientLibrary.Services
         public IServer Server { get; private set; } // The IRC server to connect to
         public IUser User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
-        //public bool Initialized { get; private set; } = false; // True if Initialized()
         #endregion Properties
 
         #region Events
-        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
+        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Event that fire every time a message is received
+        public event Func<ServerMessage, Task> ReceivedChannelMessage; // Event that fires when a message to a channel was received
+        public event Func<ServerMessage, Task> ReceivedPrivateMessage; // Event that fires when a private message to us was received
         #endregion Events
 
         #region Private Data
@@ -60,8 +60,6 @@ namespace HappyIRCClientLibrary.Services
         private readonly ITcpClient tcpClient;
         private readonly IMessageParser messageParser;
         private readonly IConfiguration configuration;
-        private readonly IMessageProccessor messageProccessor;
-        private readonly IChannelService channelService;
         private Task tcpClientTask;
         #endregion Private Data
 
@@ -69,49 +67,32 @@ namespace HappyIRCClientLibrary.Services
         /// <summary>
         /// Create an IRC Client
         /// </summary>
-        public IrcClient(ILogger<IIrcClient> log,
+        public IrcClient(ILogger<IIrcClient> logger,
             ITcpClient tcpClient,
             IMessageParser messageParser,
             IConfiguration configuration,
-            IMessageProccessor messageProccessor,
-            IChannelService channelService,
             IUser user,
             IServer server)
         {
-            this.log = log;
+            this.log = logger;
             this.tcpClient = tcpClient;
             this.messageParser = messageParser;
             this.configuration = configuration;
-            this.messageProccessor = messageProccessor;
-            this.channelService = channelService;
             this.User = user;
             this.Server = server;
         }
         #endregion Constructors
 
         #region Public Methods
-        ///// <summary>
-        ///// Initialize the client before connecting
-        ///// </summary>
-        ///// <param name="server">The server to connect to</param>
-        ///// <param name="user">The user to connect as</param>
-        //public void Initialize(Server server, User user)
-        //{
-        //    Server = server;
-        //    User = user;
-        //    Initialized = true;
-        //}
-
-        
         /// <summary>
         /// Connect to the IRC Server
         /// See RFC 2812 Section 3.1: Connection Registration
         /// </summary>
         public async Task Connect()
         {
-            tcpClient.ConnectedCallback = onTcpConnected;
-            tcpClient.ReceivedCallback = onTcpMessageReceived;
-            tcpClient.ClosedCallback = onTcpClosed;
+            tcpClient.ConnectedCallback += OnTcpConnected;
+            tcpClient.ReceivedCallback += OnTcpMessageReceived;
+            tcpClient.ClosedCallback += OnTcpClosed;
 
             tcpClientTask = tcpClient.RunAsync();
 
@@ -137,6 +118,17 @@ namespace HappyIRCClientLibrary.Services
             await tcpClientTask;
 
             Connected = false;
+        }
+
+        /// <summary>
+        /// Get a channel object for the given channel
+        /// </summary>
+        /// <param name="name">The channel Name</param>
+        /// <param name="key">The channel key</param>
+        /// <returns></returns>
+        public Channel GetChannel(string name, string key = "")
+        {
+            return new Channel(this, name, key);
         }
 
         public async void Dispose()
@@ -166,20 +158,10 @@ namespace HappyIRCClientLibrary.Services
 
             await tcpClient.Send(message);
         }
-
-        public void AddChannel(Channel channel)
-        {
-            channelService.AddChannel(channel);
-        }
-
-        public void RemoveChannel(Channel channel)
-        {
-            channelService.RemoveChannel(channel);
-        }
         #endregion Public Methods
 
         #region Private Methods
-        private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
+        private async Task OnTcpMessageReceived(ITcpClient client, int messageCount)
         {
             while (client.MessageQueue.Count > 0)
             {
@@ -215,17 +197,26 @@ namespace HappyIRCClientLibrary.Services
                 }
 
                 OnServerMessageReceived(new ServerMessageReceivedEventArgs(parsedMessage));
-                ProccessMessage(parsedMessage);
+
+                if (parsedMessage.Type == CommandType.Message)
+                {
+                    await OnPrivmsgReceived(parsedMessage);
+                }
             }
             return;
         }
 
-        private void ProccessMessage(ServerMessage message)
+        private async Task OnPrivmsgReceived(ServerMessage message)
         {
-            messageProccessor.ProccessMessage(message);
+            if(message.Channel == User.NickName)
+            {
+                await ReceivedPrivateMessage?.Invoke(message);
+            }
+
+            await ReceivedChannelMessage?.Invoke(message);
         }
 
-        private async Task onTcpConnected(ITcpClient client)
+        private async Task OnTcpConnected(ITcpClient client)
         {
             log.LogInformation("onTcpConnected(): TCP Connection Established to Server");
   
@@ -255,7 +246,7 @@ namespace HappyIRCClientLibrary.Services
             return;
         }
 
-        private void onTcpClosed(ITcpClient client, bool remote)
+        private void OnTcpClosed(ITcpClient client, bool remote)
         {
             Connected = false;
         }

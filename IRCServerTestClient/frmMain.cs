@@ -26,6 +26,7 @@ SOFTWARE.
 using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,14 +47,13 @@ namespace IRCServerTestClient
         public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
         public Mode Mode { get; set; }
 
-        private readonly IIrcClient client;
+        private IIrcClient client;
         private bool inChannel = false;
         private Channel currentChannel = null;
 
-        public frmMain(IIrcClient client)
+        public frmMain()
         {
             InitializeComponent();
-            this.client = client;
         }
 
         private async Task Setup()
@@ -64,7 +64,8 @@ namespace IRCServerTestClient
             User user = new User(Nick, Real);
             Server server = new Server("irc.quakenet.org", 6667);
 
-            client.Initialize(server, user);
+            var serviceProvider = Bootstrap.Initialize(null, server, user);
+            client = serviceProvider.GetRequiredService<IIrcClient>();
 
             frmConnecting frmCon = new frmConnecting();
             frmCon.Show(this);

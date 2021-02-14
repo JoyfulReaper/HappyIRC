@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Models
 {
@@ -32,8 +32,7 @@ namespace HappyIRCClientLibrary.Models
         string Key { get; set; }
         string Name { get; set; }
 
-        bool Join();
-        void ReceiveMessage(ServerMessage message);
-        void SendMessage(string message);
+        Task<bool> Join();
+        Task SendMessage(string message);
     }
 }
