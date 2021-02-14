@@ -1,32 +1,6 @@
-﻿/*
-MIT License
-
-Copyright(c) 2021 Kyle Givler
-https://github.com/JoyfulReaper
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-using HappyIRCClientLibrary.Events;
+﻿using HappyIRCClientLibrary.Enums;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Services;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -37,51 +11,103 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace IRCServerTestClient
+namespace HappyIrcTestClient
 {
-    public enum Mode { Raw, Simple };
-
     public partial class frmMain : Form
     {
-        public string Nick { get; set; } // setter prob shouldn't be public, but this is just test code!
-        public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
-        public Mode Mode { get; set; }
+        public Server Server { get; set; }
+        public User User { get; set; }
 
-
-        private Channel channel;
-        private IIrcClient client;
         private bool showAllMessages = true;
+        private readonly IIrcClient client;
+        private readonly CommandProccessor commandProccessor;
+        private readonly List<Channel> channels = new List<Channel>();
 
-        public frmMain()
+        public frmMain(IIrcClient client)
         {
             InitializeComponent();
+            this.client = client;
+            commandProccessor = new CommandProccessor(client, channels);
         }
 
         private async Task Setup()
         {
-            var frmNick = new FrmUserName(this);
-            frmNick.ShowDialog(this);
+            frmUser frm = new frmUser(this);
 
-            User user = new User(Nick, Real);
-            Server server = new Server("irc.quakenet.org", 6667);
+            frm.ShowDialog(this);
 
-            var serviceProvider = Bootstrap.Initialize(null, server, user);
-            client = serviceProvider.GetRequiredService<IIrcClient>();
+            client.Initialize(new Server("irc.quakenet.org", 6667), User);
 
-            frmConnecting frmCon = new frmConnecting();
-            frmCon.Show(this);
-
-            Application.DoEvents();
-
-            client.ServerMessageReceived += MessageReceived;
-            client.ReceivedChannelMessage += ChannelMessageReceived;
+            client.ReceivedChannelMessage += OnChannelMessage;
+            client.ReceivedRawMessage += OnRawMessage;
+            client.ReceivedPrivateMessage += OnPrivateMessage;
             await client.Connect();
-            frmCon.Close();
         }
 
-        private async Task ChannelMessageReceived(ServerMessage message)
+        private Task OnPrivateMessage(ServerMessage arg)
         {
-            txtServerMessages.AppendText($"{message.Nick}: {message.Trailing}{Environment.NewLine}");
+            throw new NotImplementedException();
+        }
+
+        private Task OnRawMessage(ServerMessage message)
+        {
+            StringBuilder sbParsed = new StringBuilder();
+            sbParsed.Append($"Type: {message.Type} ");
+            sbParsed.Append($"Prefix: {message.Prefix} ");
+            sbParsed.Append($"Channel: {message.Channel} ");
+            sbParsed.Append($"Nick: {message.Nick} ");
+            sbParsed.Append($"Response Code {message.ResponseCode} ");
+            sbParsed.Append($"Command: {message.Command} ");
+            foreach (var p in message.Parameters)
+            {
+                sbParsed.Append($" Parameter: {p} ");
+            }
+            sbParsed.Append($"Trailing: {message.Trailing} ");
+            sbParsed.AppendLine();
+
+            var parsed = sbParsed.ToString();
+            if(message.ResponseCode == NumericResponse.RPL_UMODEIS)
+            {
+                showAllMessages = false;
+            }
+
+            if (textBoxParsed.InvokeRequired)
+            {
+                textBoxParsed.Invoke(new MethodInvoker(delegate { textBoxParsed.AppendText($"Raw: {message.Message}\n"); }));
+                textBoxParsed.Invoke(new MethodInvoker(delegate { textBoxParsed.AppendText(parsed); }));
+                if(showAllMessages)
+                {
+                    richTextBoxChat.Invoke(new MethodInvoker(delegate { richTextBoxChat.AppendText(message.Message); }));
+                    richTextBoxChat.Invoke(new MethodInvoker(delegate { richTextBoxChat.ScrollToCaret(); }));
+                }
+            }
+            else
+            {
+                textBoxParsed.AppendText(parsed);
+                if (showAllMessages)
+                {
+                    richTextBoxChat.AppendText(message.Message);
+                    richTextBoxChat.ScrollToCaret();
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private Task OnChannelMessage(ServerMessage message)
+        {
+            if (richTextBoxChat.InvokeRequired)
+            {
+                richTextBoxChat.Invoke(new MethodInvoker(delegate { richTextBoxChat.AppendText($"{message.Nick}: {message.Trailing}\n"); }));
+                richTextBoxChat.Invoke(new MethodInvoker(delegate { richTextBoxChat.ScrollToCaret(); }));
+            }
+            else
+            {
+                richTextBoxChat.AppendText(message.Message);
+                richTextBoxChat.ScrollToCaret();
+            }
+
+            return Task.CompletedTask;
         }
 
         private async void frmMain_Load(object sender, EventArgs e)
@@ -89,121 +115,29 @@ namespace IRCServerTestClient
             await Setup();
         }
 
-        private void btnSend_Click(object sender, EventArgs e)
+        private void btnRaw_Click(object sender, EventArgs e)
         {
-            if (!client.Connected)
-            {
-                MessageBox.Show("DUDE YOU ARE NOT CONNECTED!");
-                return;
-            }
+            client.SendMessageToServer(textBoxInput.Text + "\r\n");
+            richTextBoxChat.AppendText($"Raw message sent: {textBoxInput.Text}\n");
+            richTextBoxChat.ScrollToCaret();
 
-            if (Mode == Mode.Raw)
+            textBoxInput.Text = string.Empty;
+        }
+
+        private async void btnCommand_Click(object sender, EventArgs e)
+        {
+            if (textBoxInput.Text[0] == '/')
             {
-                client.SendMessageToServer(txtSendToServer.Text + "\r\n");
-                txtServerMessages.AppendText($"YOU SENT: {txtSendToServer.Text}{Environment.NewLine}");
+                await commandProccessor.ProccessCommand(textBoxInput.Text);
             }
             else
             {
-                ProccessCommand(txtSendToServer.Text);
+                await channels[0].SendMessage(textBoxInput.Text);
+                richTextBoxChat.AppendText($"{User.NickName}: {textBoxInput.Text}\n");
+                richTextBoxChat.ScrollToCaret();
             }
 
-
-            txtSendToServer.Text = string.Empty;
-        }
-
-        // Super dumb client with all the logic in the form...
-        // Don't do it like this
-        private async Task ProccessCommand(string command)
-        {
-            if(command.ToUpperInvariant().StartsWith("/PART"))
-            {
-                var message = string.Empty;
-                if (command.Contains(" "))
-                {
-                    message = command.Substring(command.IndexOf(" "));
-                }
-
-                await channel.Part(message);
-
-                channel = null;
-                return;
-            }
-
-            if (command.ToUpperInvariant().StartsWith("/JOIN"))
-            {
-                var channel = new Channel(client, command.Substring(6));
-                await channel.Join();
-                this.channel = channel;
-
-                return;
-            }
-
-            //TODO this doesn't disconnect, look into it after fixing logging
-            if (command.ToUpperInvariant().StartsWith("/QUIT"))
-            {
-                var message = string.Empty;
-                if(command.Contains(" "))
-                {
-                    message = command.Substring(command.IndexOf(" "));
-                }
-
-                await client.SendMessageToServer($"QUIT {message}");
-                return;
-            }
-
-            txtServerMessages.AppendText($"YOU SENT: {txtSendToServer.Text}{Environment.NewLine}");
-            await channel.SendMessage(command);
-        }
-
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            client.Disconnect();
-        }
-
-        private void MessageReceived(object sender, ServerMessageReceivedEventArgs e)
-        {
-            var message = e.ServerMessage.Message;
-
-            if (txtServerMessages.InvokeRequired)
-            {
-                if (!client.Connected && Mode == Mode.Simple)
-                {
-                    txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
-                }
-                else if (Mode == Mode.Raw)
-                {
-                    txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
-                }
-            }
-            else
-            {
-                txtServerMessages.AppendText(message + '\n');
-            }
-
-            StringBuilder sbParsed = new StringBuilder();
-            sbParsed.Append($"Type: {e.ServerMessage.Type} ");
-            sbParsed.Append($"Prefix: {e.ServerMessage.Prefix} ");
-            sbParsed.Append($"Channel: {e.ServerMessage.Channel} ");
-            sbParsed.Append($"Nick: {e.ServerMessage.Nick} ");
-            sbParsed.Append($"Response Code {e.ServerMessage.ResponseCode} ");
-            sbParsed.Append($"Command: {e.ServerMessage.Command} ");
-            foreach (var p in e.ServerMessage.Parameters)
-            {
-                sbParsed.Append($" Parameter: {p} ");
-            }
-            sbParsed.Append($"Trailing: {e.ServerMessage.Trailing} ");
-            sbParsed.AppendLine();
-
-            var parsed = sbParsed.ToString();
-
-            if (txtParsedMessages.InvokeRequired)
-            {
-                txtParsedMessages.Invoke(new MethodInvoker(delegate { txtParsedMessages.AppendText(parsed); }));
-            }
-            else
-            {
-                txtParsedMessages.AppendText(parsed);
-            }
+            textBoxInput.Text = string.Empty;
         }
     }
 }

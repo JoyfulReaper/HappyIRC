@@ -23,13 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using HappyIRCClientLibrary.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.IO;
 using System.Windows.Forms;
 
-namespace IRCServerTestClient
+namespace HappyIrcTestClient
 {
     static class Program
     {
@@ -48,12 +50,15 @@ namespace IRCServerTestClient
                 //.WriteTo.Console()
                 .CreateLogger();
 
-            Log.Logger.Information("HappyIRCConsoleClient Starting");
+            Log.Logger.Information("HappyIRC Test Client Starting");
+
+            var serviceProvider = Bootstrap.Initialize(args);
+            var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMain());
+            Application.Run(new frmMain(ircClient));
         }
 
         private static void BuildConfig(IConfigurationBuilder builder)
