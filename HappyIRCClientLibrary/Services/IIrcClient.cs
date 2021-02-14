@@ -23,24 +23,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Services
 {
     public interface IIrcClient
     {
+        bool Initialized { get; }
         bool Connected { get; }
         IServer Server { get; }
         IUser User { get; }
 
-        event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Event that fire every time a message is received
+        event Func<ServerMessage, Task> ReceivedRawMessage; // Event that fire every time a message is received
         event Func<ServerMessage, Task> ReceivedChannelMessage; // Event that fires when a message to a channel was received
         event Func<ServerMessage, Task> ReceivedPrivateMessage; // Event that fires when a private message to us was received
 
+        void Initialize(Server server, User user);
         Task Connect();
         Task Disconnect();
         Task SendMessageToServer(string message);

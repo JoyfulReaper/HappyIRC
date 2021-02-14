@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCConsoleClient", "Ha
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIRCd", "HappyIRCd\HappyIRCd.csproj", "{10EDA8E2-4B9D-4C27-BA5D-61A9DB8A031D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRCServerTestClient", "IRCServerTestClient\IRCServerTestClient.csproj", "{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyIrcTestClient", "IRCServerTestClient\HappyIrcTestClient.csproj", "{6FA7EE68-45C5-4DC1-A25C-B5A907A2B044}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

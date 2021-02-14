@@ -29,6 +29,7 @@ SOFTWARE.
 // Copying and distribution of this file, with or without modification, are permitted provided the
 // copyright notice and this notice are preserved. This file is offered as-is, without any warranty.
 
+using HappyIRCClientLibrary.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -47,16 +48,14 @@ namespace HappyIRCClientLibrary.Services
         private NetworkStream stream;
         private TaskCompletionSource<bool> closedTcs = new TaskCompletionSource<bool>();
 
-        public TcpClient(ILogger<TcpClient> log,
-            IServer server)
+        public TcpClient(ILogger<TcpClient> log)
         {
             closedTcs.SetResult(true);
             this.log = log;
-            this.Server = server;
         }
 
         public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
-        public IServer Server { get; private set; }
+        public IServer Server { get; set; }
         public bool IsConnected => tcpClient.Client.Connected;
 
         /// <summary>

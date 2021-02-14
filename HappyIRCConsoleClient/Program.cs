@@ -77,8 +77,10 @@ namespace HappyIRCConsoleClient
             Server server = new Server("irc.quakenet.org", 6667);
             User user = new User("HappyIRC", "The Happiest IRC");
 
-            var serviceProvider = Bootstrap.Initialize(args, server, user);
+            var serviceProvider = Bootstrap.Initialize(args);
             var ircClient = serviceProvider.GetRequiredService<IIrcClient>();
+
+            ircClient.Initialize(server, user);
 
             if (ircClient != null)
             {

@@ -29,7 +29,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System;
 using HappyIRCClientLibrary.Models;
-using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Parsers;
 using HappyIRCClientLibrary.Enums;
 using Microsoft.Extensions.Logging;
@@ -46,17 +45,18 @@ namespace HappyIRCClientLibrary.Services
         public IServer Server { get; private set; } // The IRC server to connect to
         public IUser User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
+        public bool Initialized { get; private set; } = false;
         #endregion Properties
 
         #region Events
-        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Event that fire every time a message is received
+        public event Func<ServerMessage, Task> ReceivedRawMessage; // Event that fire every time a message is received
         public event Func<ServerMessage, Task> ReceivedChannelMessage; // Event that fires when a message to a channel was received
         public event Func<ServerMessage, Task> ReceivedPrivateMessage; // Event that fires when a private message to us was received
         #endregion Events
 
         #region Private Data
         private readonly CancellationTokenSource cts = new CancellationTokenSource();
-        private readonly ILogger<IIrcClient> log;
+        private readonly ILogger<IIrcClient> logger;
         private readonly ITcpClient tcpClient;
         private readonly IMessageParser messageParser;
         private readonly IConfiguration configuration;
@@ -70,30 +70,42 @@ namespace HappyIRCClientLibrary.Services
         public IrcClient(ILogger<IIrcClient> logger,
             ITcpClient tcpClient,
             IMessageParser messageParser,
-            IConfiguration configuration,
-            IUser user,
-            IServer server)
+            IConfiguration configuration)
         {
-            this.log = logger;
+            this.logger = logger;
             this.tcpClient = tcpClient;
             this.messageParser = messageParser;
             this.configuration = configuration;
-            this.User = user;
-            this.Server = server;
         }
         #endregion Constructors
 
         #region Public Methods
+
+        public void Initialize(Server server, User user)
+        {
+            this.User = user;
+            this.Server = server;
+
+            Initialized = true;
+            logger.LogInformation("Initialized: {server}:{port} - {User}", Server.ServerAddress, Server.Port, User.NickName);
+        }
+
         /// <summary>
         /// Connect to the IRC Server
         /// See RFC 2812 Section 3.1: Connection Registration
         /// </summary>
         public async Task Connect()
         {
+            if(!Initialized)
+            {
+                throw new InvalidOperationException("The client must be initialized first!");
+            }
+
             tcpClient.ConnectedCallback += OnTcpConnected;
             tcpClient.ReceivedCallback += OnTcpMessageReceived;
             tcpClient.ClosedCallback += OnTcpClosed;
 
+            tcpClient.Server = Server;
             tcpClientTask = tcpClient.RunAsync();
 
             while(!Connected)
@@ -147,13 +159,13 @@ namespace HappyIRCClientLibrary.Services
             // Maximum message length per RFC 2812 is 512 characters
             if (message.Length > 512)
             {
-                log.LogError("SendMessageToServer(): Message exceeds 512 characters");
+                logger.LogError("SendMessageToServer(): Message exceeds 512 characters");
                 throw new ArgumentOutOfRangeException(nameof(message), "message cannot exceed 512 characters");
             }
 
             if (!message.EndsWith("\r\n"))
             {
-                log.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
+                logger.LogWarning("SendMessageToServer(): Message does not end in CR-LF: {message}", message);
             }
 
             await tcpClient.Send(message);
@@ -167,7 +179,7 @@ namespace HappyIRCClientLibrary.Services
             {
                 var message = client.MessageQueue.Dequeue();
 
-                log.LogDebug("MessageReceived: {message}", message);
+                logger.LogDebug("MessageReceived: {message}", message.Replace("\r", "").Replace("\n", ""));
                 if(message.ToUpperInvariant().StartsWith("PING"))
                 {
                     RespondToPing(message);
@@ -179,8 +191,8 @@ namespace HappyIRCClientLibrary.Services
                 {
                     if (parsedMessage.ResponseCode == NumericResponse.ERR_NICKNAMEINUSE)
                     {
-                        log.LogCritical("Server reports nick {nick} is in use!", User.NickName);
-                        log.LogCritical("Quiting.");
+                        logger.LogCritical("Server reports nick {nick} is in use!", User.NickName);
+                        logger.LogCritical("Quiting.");
 
                         await client.Send("QUIT\r\n");
                         client.Disconnect();
@@ -192,11 +204,11 @@ namespace HappyIRCClientLibrary.Services
                     if (parsedMessage.ResponseCode == NumericResponse.RPL_WELCOME)
                     {
                         Connected = true;
-                        log.LogInformation("IRC Server acknowledges we are connected.");
+                        logger.LogInformation("IRC Server acknowledges we are connected.");
                     }
                 }
 
-                OnServerMessageReceived(new ServerMessageReceivedEventArgs(parsedMessage));
+                await OnServerMessageReceived(parsedMessage);
 
                 if (parsedMessage.Type == CommandType.Message)
                 {
@@ -204,6 +216,19 @@ namespace HappyIRCClientLibrary.Services
                 }
             }
             return;
+        }
+
+        /// <summary>
+        /// A message has been received by the server,
+        /// fire an event to let the subscribers know.
+        /// </summary>
+        /// <param name="e">The event args</param>
+        private async Task OnServerMessageReceived(ServerMessage message)
+        {
+            if (ReceivedRawMessage != null)
+            {
+                await ReceivedRawMessage?.Invoke(message);
+            }
         }
 
         private async Task OnPrivmsgReceived(ServerMessage message)
@@ -218,7 +243,7 @@ namespace HappyIRCClientLibrary.Services
 
         private async Task OnTcpConnected(ITcpClient client)
         {
-            log.LogInformation("onTcpConnected(): TCP Connection Established to Server");
+            logger.LogInformation("onTcpConnected(): TCP Connection Established to Server");
   
             // Honestly I think we just have to wait here, it has to get past the IDENT lookup before we can send NICK and USER as far as I can tell
             // TODO look into this more
@@ -239,7 +264,7 @@ namespace HappyIRCClientLibrary.Services
                 await Task.Delay(500);
                 if(!client.IsConnected)
                 {
-                    log.LogError("TcpClient is not connected, but we are waiting for the IRC server to ackknowlege our connection.");
+                    logger.LogError("TcpClient is not connected, but we are waiting for the IRC server to ackknowlege our connection.");
                     throw new InvalidOperationException("Something happened, the TCP connection isn't open!");
                 }
             }
@@ -253,14 +278,14 @@ namespace HappyIRCClientLibrary.Services
 
         private void ThrowIfNotConnectedOrInitialized()
         {
-            //if (!Initialized)
-            //{
-            //    log.LogError("Client is not initialized");
-            //    throw new InvalidOperationException("The Client is not initialized.");
-            //}
+            if (!Initialized)
+            {
+                logger.LogError("Client is not initialized");
+                throw new InvalidOperationException("The Client is not initialized.");
+            }
             if (!Connected)
             {
-                log.LogError("Client is not connected to a server");
+                logger.LogError("Client is not connected to a server");
                 throw new InvalidOperationException("The client is not connected to a server.");
             }
         }
@@ -273,15 +298,6 @@ namespace HappyIRCClientLibrary.Services
         #endregion Private Methods
 
         #region Protected Methods
-        /// <summary>
-        /// A message has been received by the server,
-        /// fire an event to let the subscribers know.
-        /// </summary>
-        /// <param name="e">The event args</param>
-        protected virtual void OnServerMessageReceived(ServerMessageReceivedEventArgs e)
-        {
-            ServerMessageReceived?.Invoke(this, e);
-        }
         #endregion Protected Methods
 
         #region Internal Methods

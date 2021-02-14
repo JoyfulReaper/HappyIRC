@@ -23,17 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using HappyIRCClientLibrary.Models;
-
-namespace HappyIRCClientLibrary.Events
+namespace HappyIRCClientLibrary.Models
 {
-    public class ServerMessageReceivedEventArgs : System.EventArgs
+    public interface IServer
     {
-        public readonly ServerMessage ServerMessage;
-
-        public ServerMessageReceivedEventArgs(ServerMessage serverMessage)
-        {
-            ServerMessage = serverMessage;
-        }
+        string Password { get; set; }
+        int Port { get; }
+        string ServerAddress { get; }
     }
 }

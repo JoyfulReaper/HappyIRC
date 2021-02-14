@@ -41,7 +41,7 @@ namespace HappyIRCClientLibrary.Services
         bool IsConnected { get; }
         Queue<string> MessageQueue { get; set; }
         event Func<ITcpClient, int, Task> ReceivedCallback;
-        IServer Server { get; }
+        IServer Server { get; set;  }
 
         void Disconnect();
         void Dispose();
