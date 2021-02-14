@@ -26,6 +26,7 @@ SOFTWARE.
 using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,14 +47,14 @@ namespace IRCServerTestClient
         public string Real { get; set; } // setter prob shouldn't be public, but this is just test code!
         public Mode Mode { get; set; }
 
-        private readonly IIrcClient client;
-        private bool inChannel = false;
-        private Channel currentChannel = null;
 
-        public frmMain(IIrcClient client)
+        private Channel channel;
+        private IIrcClient client;
+        private bool showAllMessages = true;
+
+        public frmMain()
         {
             InitializeComponent();
-            this.client = client;
         }
 
         private async Task Setup()
@@ -64,7 +65,8 @@ namespace IRCServerTestClient
             User user = new User(Nick, Real);
             Server server = new Server("irc.quakenet.org", 6667);
 
-            client.Initialize(server, user);
+            var serviceProvider = Bootstrap.Initialize(null, server, user);
+            client = serviceProvider.GetRequiredService<IIrcClient>();
 
             frmConnecting frmCon = new frmConnecting();
             frmCon.Show(this);
@@ -72,8 +74,14 @@ namespace IRCServerTestClient
             Application.DoEvents();
 
             client.ServerMessageReceived += MessageReceived;
+            client.ReceivedChannelMessage += ChannelMessageReceived;
             await client.Connect();
             frmCon.Close();
+        }
+
+        private async Task ChannelMessageReceived(ServerMessage message)
+        {
+            txtServerMessages.AppendText($"{message.Nick}: {message.Trailing}{Environment.NewLine}");
         }
 
         private async void frmMain_Load(object sender, EventArgs e)
@@ -83,25 +91,29 @@ namespace IRCServerTestClient
 
         private void btnSend_Click(object sender, EventArgs e)
         {
+            if (!client.Connected)
+            {
+                MessageBox.Show("DUDE YOU ARE NOT CONNECTED!");
+                return;
+            }
+
             if (Mode == Mode.Raw)
             {
                 client.SendMessageToServer(txtSendToServer.Text + "\r\n");
+                txtServerMessages.AppendText($"YOU SENT: {txtSendToServer.Text}{Environment.NewLine}");
             }
             else
             {
-                if(!client.Connected)
-                {
-                    MessageBox.Show("DUDE YOU ARE NOT CONNECTED!");
-                }
                 ProccessCommand(txtSendToServer.Text);
             }
+
 
             txtSendToServer.Text = string.Empty;
         }
 
         // Super dumb client with all the logic in the form...
         // Don't do it like this
-        private void ProccessCommand(string command)
+        private async Task ProccessCommand(string command)
         {
             if(command.ToUpperInvariant().StartsWith("/PART"))
             {
@@ -111,17 +123,17 @@ namespace IRCServerTestClient
                     message = command.Substring(command.IndexOf(" "));
                 }
 
-                currentChannel.Part(message);
+                await channel.Part(message);
 
-                inChannel = false;
+                channel = null;
                 return;
             }
 
             if (command.ToUpperInvariant().StartsWith("/JOIN"))
             {
                 var channel = new Channel(client, command.Substring(6));
-                channel.Join();
-                currentChannel = channel;
+                await channel.Join();
+                this.channel = channel;
 
                 return;
             }
@@ -135,11 +147,12 @@ namespace IRCServerTestClient
                     message = command.Substring(command.IndexOf(" "));
                 }
 
-                client.SendMessageToServer($"QUIT {message}");
+                await client.SendMessageToServer($"QUIT {message}");
                 return;
             }
 
-            currentChannel.SendMessage(command);
+            txtServerMessages.AppendText($"YOU SENT: {txtSendToServer.Text}{Environment.NewLine}");
+            await channel.SendMessage(command);
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -153,7 +166,14 @@ namespace IRCServerTestClient
 
             if (txtServerMessages.InvokeRequired)
             {
-                txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
+                if (!client.Connected && Mode == Mode.Simple)
+                {
+                    txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
+                }
+                else if (Mode == Mode.Raw)
+                {
+                    txtServerMessages.Invoke(new MethodInvoker(delegate { txtServerMessages.AppendText(message + '\n'); }));
+                }
             }
             else
             {

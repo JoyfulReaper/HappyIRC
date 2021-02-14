@@ -26,6 +26,7 @@ SOFTWARE.
 using HappyIRCClientLibrary.Events;
 using HappyIRCClientLibrary.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Services
@@ -33,14 +34,16 @@ namespace HappyIRCClientLibrary.Services
     public interface IIrcClient
     {
         bool Connected { get; }
-        Server Server { get; }
-        User User { get; }
+        IServer Server { get; }
+        IUser User { get; }
 
-        event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived;
+        event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Event that fire every time a message is received
+        event Func<ServerMessage, Task> ReceivedChannelMessage; // Event that fires when a message to a channel was received
+        event Func<ServerMessage, Task> ReceivedPrivateMessage; // Event that fires when a private message to us was received
 
-        void Initialize(Server server, User user);
         Task Connect();
         Task Disconnect();
         Task SendMessageToServer(string message);
+        Channel GetChannel(string name, string key = "");
     }
 }

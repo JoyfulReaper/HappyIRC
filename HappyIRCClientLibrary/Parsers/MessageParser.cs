@@ -138,17 +138,7 @@ namespace HappyIRCClientLibrary.Parsers
 
             if (command == "PRIVMSG")
             {
-                // TODO Fix this
-
-                //if (parameters[0] == clientNick)
-                //{
-                //    type = CommandType.PrivateMessage;
-                //}
-                //else
-                //{
-                //    type = CommandType.ChannelMessage;
-                //}
-                type = CommandType.PrivateMessage;
+                type = CommandType.Message;
             }
 
             if (int.TryParse(command, out int reply))

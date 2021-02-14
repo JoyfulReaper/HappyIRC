@@ -30,9 +30,9 @@ using System.Threading.Tasks;
 using System;
 using HappyIRCClientLibrary.Models;
 using HappyIRCClientLibrary.Events;
-using Microsoft.Extensions.Logging;
 using HappyIRCClientLibrary.Parsers;
 using HappyIRCClientLibrary.Enums;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 namespace HappyIRCClientLibrary.Services
@@ -43,14 +43,15 @@ namespace HappyIRCClientLibrary.Services
     public class IrcClient : IIrcClient, IDisposable
     {
         #region Properties
-        public Server Server { get; private set; } // The IRC server to connect to
-        public User User { get; private set; } // The user to connect as
+        public IServer Server { get; private set; } // The IRC server to connect to
+        public IUser User { get; private set; } // The user to connect as
         public bool Connected { get; private set; } = false;// True if connected
-        public bool Initialized { get; private set; } = false; // True if Initialized()
         #endregion Properties
 
         #region Events
-        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Envent that fire every time a message is received
+        public event EventHandler<ServerMessageReceivedEventArgs> ServerMessageReceived; // Event that fire every time a message is received
+        public event Func<ServerMessage, Task> ReceivedChannelMessage; // Event that fires when a message to a channel was received
+        public event Func<ServerMessage, Task> ReceivedPrivateMessage; // Event that fires when a private message to us was received
         #endregion Events
 
         #region Private Data
@@ -66,42 +67,32 @@ namespace HappyIRCClientLibrary.Services
         /// <summary>
         /// Create an IRC Client
         /// </summary>
-        public IrcClient(ILogger<IIrcClient> log,
+        public IrcClient(ILogger<IIrcClient> logger,
             ITcpClient tcpClient,
             IMessageParser messageParser,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IUser user,
+            IServer server)
         {
-            this.log = log;
+            this.log = logger;
             this.tcpClient = tcpClient;
             this.messageParser = messageParser;
             this.configuration = configuration;
+            this.User = user;
+            this.Server = server;
         }
         #endregion Constructors
 
         #region Public Methods
-        /// <summary>
-        /// Initialize the client before connecting
-        /// </summary>
-        /// <param name="server">The server to connect to</param>
-        /// <param name="user">The user to connect as</param>
-        public void Initialize(Server server, User user)
-        {
-            Server = server;
-            User = user;
-            Initialized = true;
-        }
-
-        
         /// <summary>
         /// Connect to the IRC Server
         /// See RFC 2812 Section 3.1: Connection Registration
         /// </summary>
         public async Task Connect()
         {
-            tcpClient.Server = Server;
-            tcpClient.ConnectedCallback = onTcpConnected;
-            tcpClient.ReceivedCallback = onTcpMessageReceived;
-            tcpClient.ClosedCallback = onTcpClosed;
+            tcpClient.ConnectedCallback += OnTcpConnected;
+            tcpClient.ReceivedCallback += OnTcpMessageReceived;
+            tcpClient.ClosedCallback += OnTcpClosed;
 
             tcpClientTask = tcpClient.RunAsync();
 
@@ -127,6 +118,17 @@ namespace HappyIRCClientLibrary.Services
             await tcpClientTask;
 
             Connected = false;
+        }
+
+        /// <summary>
+        /// Get a channel object for the given channel
+        /// </summary>
+        /// <param name="name">The channel Name</param>
+        /// <param name="key">The channel key</param>
+        /// <returns></returns>
+        public Channel GetChannel(string name, string key = "")
+        {
+            return new Channel(this, name, key);
         }
 
         public async void Dispose()
@@ -159,7 +161,7 @@ namespace HappyIRCClientLibrary.Services
         #endregion Public Methods
 
         #region Private Methods
-        private async Task onTcpMessageReceived(ITcpClient client, int messageCount)
+        private async Task OnTcpMessageReceived(ITcpClient client, int messageCount)
         {
             while (client.MessageQueue.Count > 0)
             {
@@ -195,11 +197,26 @@ namespace HappyIRCClientLibrary.Services
                 }
 
                 OnServerMessageReceived(new ServerMessageReceivedEventArgs(parsedMessage));
+
+                if (parsedMessage.Type == CommandType.Message)
+                {
+                    await OnPrivmsgReceived(parsedMessage);
+                }
             }
             return;
         }
 
-        private async Task onTcpConnected(ITcpClient client)
+        private async Task OnPrivmsgReceived(ServerMessage message)
+        {
+            if(message.Channel == User.NickName)
+            {
+                await ReceivedPrivateMessage?.Invoke(message);
+            }
+
+            await ReceivedChannelMessage?.Invoke(message);
+        }
+
+        private async Task OnTcpConnected(ITcpClient client)
         {
             log.LogInformation("onTcpConnected(): TCP Connection Established to Server");
   
@@ -229,18 +246,18 @@ namespace HappyIRCClientLibrary.Services
             return;
         }
 
-        private void onTcpClosed(ITcpClient client, bool remote)
+        private void OnTcpClosed(ITcpClient client, bool remote)
         {
             Connected = false;
         }
 
         private void ThrowIfNotConnectedOrInitialized()
         {
-            if (!Initialized)
-            {
-                log.LogError("Client is not initialized");
-                throw new InvalidOperationException("The Client is not initialized.");
-            }
+            //if (!Initialized)
+            //{
+            //    log.LogError("Client is not initialized");
+            //    throw new InvalidOperationException("The Client is not initialized.");
+            //}
             if (!Connected)
             {
                 log.LogError("Client is not connected to a server");
@@ -267,75 +284,7 @@ namespace HappyIRCClientLibrary.Services
         }
         #endregion Protected Methods
 
-        ////////////////////////////// !!!NOTE: This stuff will be re-factored into a different class!!! ///////////////////////////
-
-
-        ///// <summary>
-        ///// Join a channel
-        ///// </summary>
-        ///// <param name="channel"></param>
-        //public void Join(string channel)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-
-        //    ThrowIfNotConnectedOrInitialized();
-
-        //    log.Info($"Attemping to join channel: {channel}");
-        //    SendMessageToServer($"JOIN {channel}\r\n");
-        //    Channel chan = new Channel() { Name = channel };
-
-        //    Channels.Add(chan);
-
-
-        //    /*Possible replies:
-        //    ERR_NEEDMOREPARAMS ERR_BANNEDFROMCHAN
-        //   ERR_INVITEONLYCHAN ERR_BADCHANNELKEY
-        //   ERR_CHANNELISFULL ERR_BADCHANMASK
-        //   ERR_NOSUCHCHANNEL ERR_TOOMANYCHANNELS
-        //   ERR_TOOMANYTARGETS ERR_UNAVAILRESOURCE
-        //   RPL_TOPIC */
-        //}
-
-        ///// <summary>
-        ///// Part (leave) a channel
-        ///// </summary>
-        ///// <param name="channel">The channel to part</param>
-        //public void Part(string channel)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-
-        //    ThrowIfNotConnectedOrInitialized();
-
-        //    log.Info($"Attemping to part channel: {channel}");
-        //    SendMessageToServer($"PART {channel}\r\n");
-
-        //    Channels.Remove(Channels.Where(x => x.Name == channel).FirstOrDefault());
-
-        //    /* Possible replies
-        //   ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
-        //   ERR_NOTONCHANNEL */
-        //}
-
-        ///// <summary>
-        ///// Send a chat message
-        ///// </summary>
-        ///// <param name="target">The nick or channel to send the message to</param>
-        ///// <param name="message">The message to send</param>
-        //public void SendMessage(string target, string message)
-        //{
-        //    //TODO Error checking! Check to see if the client is in the channel first, check the server reply somewhow for the known responses
-        //    ThrowIfNotConnectedOrInitialized();
-
-        //    log.Debug($"Attempting to message: {target} Message: {message}");
-        //    SendMessageToServer($"PRIVMSG {target} :{message}\r\n");
-
-        //    /*
-        //     Possible Replies
-        //   ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
-        //   ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
-        //   ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
-        //   ERR_NOSUCHNICK
-        //   RPL_AWAY */
-        //}
+        #region Internal Methods
+        #endregion Internal Methods
     }
 }

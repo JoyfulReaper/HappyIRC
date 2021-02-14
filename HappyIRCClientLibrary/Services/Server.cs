@@ -23,18 +23,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-
-namespace HappyIRCClientLibrary.Models
+namespace HappyIRCClientLibrary.Services
 {
-    public interface IUser
+    public class Server : IServer
     {
-        List<char> Mode { get; set; }
-        string NickName { get; set; }
-        string RealName { get; set; }
+        #region Properties
+        public string ServerAddress { get; private set; }
+        public int Port { get; private set; }
+        public string Password { get; set; }
+        #endregion Properties
 
-        void ReceiveMessage(object sender, EventArgs e);
-        void SendMessage(string message);
+        #region Constructors
+        public Server(string serverAddress, int port, string password = "")
+        {
+            ServerAddress = serverAddress;
+            Port = port;
+            Password = password; // RFC 2812 3.1.1 Password message
+        }
+        #endregion Constructors
     }
 }

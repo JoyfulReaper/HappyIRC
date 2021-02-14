@@ -35,6 +35,7 @@ using HappyIRCClientLibrary.Services;
 using Serilog;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace HappyIRCClientLibrary.Models
 {
@@ -66,6 +67,7 @@ namespace HappyIRCClientLibrary.Models
 
         #region Private Data
         private readonly IIrcClient client;
+        private readonly ILogger logger = Log.ForContext(typeof(Channel));
         private static readonly char[] validStartingChars = { '&', '#', '+', '!' };
 
         /// <summary>
@@ -80,6 +82,8 @@ namespace HappyIRCClientLibrary.Models
             this.client = client;
             this.Name = name;
             this.Key = key;
+
+            logger.Debug("Constructed Channel: {name}", Name);
         }
         #endregion Constructors
 
@@ -88,20 +92,10 @@ namespace HappyIRCClientLibrary.Models
         /// Send a message to this channel
         /// </summary>
         /// <param name="message">The message to send</param>
-        public void SendMessage(string message)
+        public async Task SendMessage(string message)
         {
-            Log.Debug("Sending {message} to {channel}", message, Name);
-            client.SendMessageToServer($"PRIVMSG {Name} :{message}\r\n");
-        }
-
-        /// <summary>
-        /// Called when a message is sent to this channel
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ReceiveMessage(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
+            logger.Debug("Sending {message} to {channel}", message, Name);
+            await client.SendMessageToServer($"PRIVMSG {Name} :{message}\r\n");
         }
 
         /// <summary>
@@ -110,7 +104,7 @@ namespace HappyIRCClientLibrary.Models
         /// http://www.geekshed.net/2012/03/using-channel-keys/ Channel Keys
         /// </summary>
         /// <returns></returns>
-        public bool Join()
+        public async Task<bool> Join()
         {
             /*
            TODO: Error checking
@@ -123,6 +117,8 @@ namespace HappyIRCClientLibrary.Models
            RPL_TOPIC
             */
 
+            logger.Debug("Joining Channel: {name}", Name);
+
             StringBuilder joinBuilder = new StringBuilder($"JOIN {Name}");
             if (!string.IsNullOrEmpty(Key))
             {
@@ -130,8 +126,7 @@ namespace HappyIRCClientLibrary.Models
             }
             joinBuilder.Append("\r\n");
 
-            client.SendMessageToServer(joinBuilder.ToString());
-
+            await client.SendMessageToServer(joinBuilder.ToString());
             return true;
         }
 
@@ -139,9 +134,9 @@ namespace HappyIRCClientLibrary.Models
         /// Part the channel
         /// </summary>
         /// <returns></returns>
-        public bool Part()
+        public async Task<bool> Part()
         {
-            return Part(string.Empty);
+            return await Part(string.Empty);
         }
 
         /// <summary>
@@ -149,13 +144,15 @@ namespace HappyIRCClientLibrary.Models
         /// </summary>
         /// <param name="message">The parting message</param>
         /// <returns></returns>
-        public bool Part(string message)
+        public async Task<bool> Part(string message)
         {
             /* Possible replies
             TODO: Error checking
             ERR_NEEDMOREPARAMS              ERR_NOSUCHCHANNEL
             ERR_NOTONCHANNEL 
             */
+
+            logger.Debug("Parting Channel: {name}", Name);
 
             StringBuilder partBuilder = new StringBuilder($"PART {name}");
             if(!string.IsNullOrEmpty(message))
@@ -164,8 +161,7 @@ namespace HappyIRCClientLibrary.Models
             }
             partBuilder.Append("\r\n");
 
-            client.SendMessageToServer(partBuilder.ToString());
-
+            await client.SendMessageToServer(partBuilder.ToString());
             return true;
         }
 

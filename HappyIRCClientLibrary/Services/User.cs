@@ -26,13 +26,14 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 
-namespace HappyIRCClientLibrary.Models
+namespace HappyIRCClientLibrary.Services
 {
     public class User : IUser
     {
         #region Properties
         /// <summary>
         /// User's Nick
+        /// RFC2812 limits the length of a nickname to (9) characters!
         /// </summary>
         public string NickName { get; set; }
 
