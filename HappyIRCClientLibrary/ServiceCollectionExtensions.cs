@@ -16,10 +16,11 @@ namespace HappyIRCClientLibrary
         /// <param name="server">The server to connect to</param>
         /// <param name="user">The user to connect as</param>
         /// <returns></returns>
-        public static IServiceCollection AddHappyIrcClient(this IServiceCollection services, IServer server, IUser user)
+        public static IServiceCollection AddHappyIrcClient(this IServiceCollection services)
         {
-            services.AddTransient(x => server)
-           .AddTransient(x => user)
+            services
+           //.AddTransient(x => server)
+           //.AddTransient(x => user)
            //.AddOptions() https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-5.0
            .AddTransient<ITcpClient, TcpClient>()
            .AddSingleton<IMessageParser, MessageParser>()
