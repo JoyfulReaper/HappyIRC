@@ -10,6 +10,21 @@ namespace HappyIRCConsoleClient
 {
     static class Bootstrap
     {
+        public static void SetupLogging()
+        {
+            var configBuilder = new ConfigurationBuilder();
+            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+                .AddEnvironmentVariables();
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configBuilder.Build())
+                .Enrich.FromLogContext()
+                .CreateLogger();
+            Log.Logger.Information("HappyIRCConsoleClient Starting");
+        }
+
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             IConfigurationBuilder configBuilder = new ConfigurationBuilder()
@@ -20,10 +35,10 @@ namespace HappyIRCConsoleClient
             IConfiguration config = configBuilder.Build();
 
             return Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddLogging(configure => configure.AddSerilog())
-                    .AddSingleton<IConfiguration>(config)
+                    services.AddSingleton<IConfiguration>(config)
                     .AddHappyIrcClient()
                     .AddSingleton<IApplication, Application>();
                 });
